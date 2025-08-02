@@ -3,6 +3,7 @@ local player = Players.LocalPlayer or Players:GetPlayers()[1]
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 local playerGui = player:WaitForChild("PlayerGui")
@@ -54,7 +55,7 @@ frame.InputChanged:Connect(function(input)
     end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         update(input)
     end
@@ -72,10 +73,22 @@ titleLabel.TextSize = 22
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = frame
 
+-- Status Label
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -40, 0, 20)
+statusLabel.Position = UDim2.new(0, 20, 0, 50)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: Idle"
+statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 14
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = frame
+
 -- MPS Dropdown Label
 local mpsLabel = Instance.new("TextLabel")
 mpsLabel.Size = UDim2.new(1, -40, 0, 20)
-mpsLabel.Position = UDim2.new(0, 20, 0, 60)
+mpsLabel.Position = UDim2.new(0, 20, 0, 80)
 mpsLabel.BackgroundTransparency = 1
 mpsLabel.Text = "Select MPS Range:"
 mpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -87,7 +100,7 @@ mpsLabel.Parent = frame
 -- MPS Dropdown Button
 local mpsDropdown = Instance.new("TextButton")
 mpsDropdown.Size = UDim2.new(1, -40, 0, 40)
-mpsDropdown.Position = UDim2.new(0, 20, 0, 85)
+mpsDropdown.Position = UDim2.new(0, 20, 0, 105)
 mpsDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 mpsDropdown.BorderSizePixel = 0
 mpsDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -100,7 +113,7 @@ mpsDropdown.Parent = frame
 -- Dropdown container for MPS options
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
-optionsFrame.Position = UDim2.new(0, 20, 0, 125)
+optionsFrame.Position = UDim2.new(0, 20, 0, 145)
 optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 optionsFrame.BorderSizePixel = 0
 optionsFrame.ClipsDescendants = true
@@ -158,8 +171,8 @@ local function createButton(text, positionY)
     return btn
 end
 
-local startBtn = createButton("Start", 190)
-local stopBtn = createButton("Stop", 240)
+local startBtn = createButton("Start", 210)
+local stopBtn = createButton("Stop", 260)
 
 -- Minimize Button
 local minimizeBtn = Instance.new("ImageButton")
@@ -189,79 +202,136 @@ minimizedImage.MouseButton1Click:Connect(function()
     minimizedImage.Visible = false
 end)
 
--- ========== Server Hopping Logic ==========
+-- ========== Improved Server Hopping Logic ==========
 
-local PLACE_ID = 109983668079237 -- Replace with your Roblox place ID
-local JOBID_ENDPOINT = "https://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/" -- Your endpoint
+local PLACE_ID = 109983668079237 -- Your Roblox place ID
+local JOBID_ENDPOINT = "https://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev" -- Removed trailing slash
 
 local isRunning = false
 local currentJobIdIndex = 0
 local jobIds = {}
+local hoppingTask
+local teleportAttempts = 0
+local MAX_TELEPORT_ATTEMPTS = 5
 
--- Fetch job IDs from your endpoint
+local function updateStatus(text, color)
+    statusLabel.Text = "Status: "..text
+    statusLabel.TextColor3 = color or Color3.fromRGB(200, 200, 200)
+end
+
+-- Improved fetch with retry logic
 local function fetchJobIds()
-    local success, response = pcall(function()
-        return HttpService:GetAsync(JOBID_ENDPOINT)
-    end)
-    if success then
-        local ok, data = pcall(function()
-            return HttpService:JSONDecode(response)
+    local attempts = 0
+    local maxAttempts = 3
+    local delayBetweenAttempts = 2
+    
+    while attempts < maxAttempts do
+        attempts += 1
+        
+        local success, response = pcall(function()
+            updateStatus("Fetching servers...", Color3.fromRGB(255, 255, 0))
+            return HttpService:GetAsync(JOBID_ENDPOINT)
         end)
-        if ok and type(data) == "table" then
-            return data
+        
+        if success then
+            local ok, data = pcall(function()
+                return HttpService:JSONDecode(response)
+            end)
+            
+            if ok and type(data) == "table" and #data > 0 then
+                updateStatus("Fetched "..#data.." servers", Color3.fromRGB(0, 255, 0))
+                return data
+            else
+                warn("Failed to decode job ids JSON or data not a table")
+            end
         else
-            warn("Failed to decode job ids JSON or data not a table")
+            warn("Attempt "..attempts.." failed to fetch job ids:", response)
         end
-    else
-        warn("Failed to fetch job ids:", response)
+        
+        if attempts < maxAttempts then
+            task.wait(delayBetweenAttempts)
+        end
     end
+    
+    updateStatus("Fetch failed", Color3.fromRGB(255, 0, 0))
     return nil
 end
 
--- Server hop to next jobId
+-- Improved server hop with error handling
 local function serverHop()
     if #jobIds == 0 then
         warn("No job ids available for teleport")
-        return
+        updateStatus("No servers found", Color3.fromRGB(255, 0, 0))
+        return false
     end
+    
     currentJobIdIndex = currentJobIdIndex + 1
     if currentJobIdIndex > #jobIds then
         currentJobIdIndex = 1
     end
 
     local jobId = jobIds[currentJobIdIndex]
+    updateStatus("Joining server "..currentJobIdIndex.."/"..#jobIds, Color3.fromRGB(0, 255, 255))
     print("Teleporting to job id:", jobId)
 
-    TeleportService:TeleportToPlaceInstance(PLACE_ID, jobId, player)
+    local success, err = pcall(function()
+        TeleportService:TeleportToPlaceInstance(PLACE_ID, jobId, player)
+    end)
+    
+    if not success then
+        warn("Teleport failed:", err)
+        updateStatus("Teleport failed", Color3.fromRGB(255, 0, 0))
+        return false
+    end
+    
+    return true
 end
-
-local hoppingTask
 
 startBtn.MouseButton1Click:Connect(function()
     if isRunning then
         print("AutoJoiner already running")
         return
     end
+    
     isRunning = true
+    teleportAttempts = 0
+    updateStatus("Starting...", Color3.fromRGB(0, 255, 255))
     print("AutoJoiner started")
 
     -- Spawn the loop that fetches jobIds and teleports
     hoppingTask = task.spawn(function()
-        while isRunning do
+        while isRunning and teleportAttempts < MAX_TELEPORT_ATTEMPTS do
             print("Fetching job IDs...")
             local fetchedJobIds = fetchJobIds()
 
-            -- OPTIONAL: Filter job IDs by selected MPS range here if your server returns MPS data
-            -- For now, we just assign fetched IDs directly
             if fetchedJobIds and #fetchedJobIds > 0 then
                 jobIds = fetchedJobIds
-                serverHop()
+                if serverHop() then
+                    teleportAttempts = 0
+                else
+                    teleportAttempts += 1
+                end
             else
                 warn("No valid job ids fetched")
+                teleportAttempts += 1
             end
 
-            wait(5) -- Wait 5 seconds before next fetch/teleport
+            if isRunning then
+                -- Wait between attempts, but check isRunning frequently
+                local waitTime = 0
+                while waitTime < 5 and isRunning do
+                    task.wait(0.5)
+                    waitTime += 0.5
+                end
+            end
         end
+        
+        if teleportAttempts >= MAX_TELEPORT_ATTEMPTS then
+            updateStatus("Max attempts reached", Color3.fromRGB(255, 0, 0))
+            warn("Max teleport attempts reached")
+        end
+        
+        isRunning = false
         print("AutoJoiner loop ended")
     end)
 end)
@@ -272,5 +342,16 @@ stopBtn.MouseButton1Click:Connect(function()
         return
     end
     isRunning = false
+    updateStatus("Stopped", Color3.fromRGB(255, 100, 100))
     print("AutoJoiner stopped")
+end)
+
+-- Clean up on player leaving
+player.AncestryChanged:Connect(function(_, parent)
+    if not parent then
+        isRunning = false
+        if hoppingTask then
+            task.cancel(hoppingTask)
+        end
+    end
 end)
