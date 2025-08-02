@@ -18,6 +18,12 @@ frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Black background
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
+-- Create a UIListLayout to handle automatic resizing when dropdown opens/closes
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 10)  -- Adds some space between elements
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = frame
+
 -- Function to create animated red border around the frame
 local function createAnimatedBorder()
     -- Top border
@@ -74,45 +80,6 @@ end
 
 -- Call function to create animated red border
 createAnimatedBorder()
-
--- Draggable logic
-local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    frame.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
-end
-
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
 
 -- Label with white text
 local label = Instance.new("TextLabel")
@@ -202,15 +169,13 @@ local function createButton(text, positionY)
     return btn
 end
 
-local startBtn = createButton("Start", 250)
-local stopBtn = createButton("Stop", 300)
+local startBtn = createButton("Start", 180)
+local stopBtn = createButton("Stop", 230)
 
 startBtn.MouseButton1Click:Connect(function()
     print("Start clicked")
-    -- Add any start functionality here
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
     print("Stop clicked")
-    -- Add any stop functionality here
 end)
