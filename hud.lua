@@ -184,7 +184,7 @@ local minimizedImage = Instance.new("ImageButton")
 minimizedImage.Size = UDim2.new(0, 40, 0, 40)
 minimizedImage.Position = UDim2.new(1, -40, 0, 0)
 minimizedImage.BackgroundTransparency = 1
-minimizedImage.Image = "rbxassetid://2398054"  -- Placeholder for image (update with your own asset ID)
+minimizedImage.Image = "rbxassetid://2398054"  -- Test Image (Default Roblox image)
 minimizedImage.Visible = false  -- Initially hidden
 minimizedImage.Parent = frame
 
@@ -198,4 +198,3 @@ minimizedImage.MouseButton1Click:Connect(function()
     frame.Visible = true
     minimizedImage.Visible = false
 end)
-
