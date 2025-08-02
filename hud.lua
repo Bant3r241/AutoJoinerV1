@@ -12,8 +12,8 @@ screenGui.Parent = playerGui
 
 -- Create draggable frame with black background
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 280, 0, 350)  -- Adjusted size to fit all elements
-frame.Position = UDim2.new(0.5, -140, 0.3, 0)
+frame.Size = UDim2.new(0, 300, 0, 400)  -- Set initial size
+frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Black background
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
@@ -26,59 +26,57 @@ layout.Parent = frame
 
 -- Function to create animated red border around the frame
 local function createAnimatedBorder()
-    -- Top border
+    local TweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, true)
+
+    -- Create borders (Top, Bottom, Left, Right)
+    local border = Instance.new("Frame")
+    border.Size = UDim2.new(1, 0, 1, 0)
+    border.Position = UDim2.new(0, 0, 0, 0)
+    border.BackgroundTransparency = 1
+    border.Parent = frame
+
     local topBorder = Instance.new("Frame")
     topBorder.Size = UDim2.new(1, 0, 0, 2)
     topBorder.Position = UDim2.new(0, 0, 0, 0)
-    topBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red color
+    topBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     topBorder.BorderSizePixel = 0
-    topBorder.Parent = frame
+    topBorder.Parent = border
 
-    -- Bottom border
     local bottomBorder = Instance.new("Frame")
     bottomBorder.Size = UDim2.new(1, 0, 0, 2)
     bottomBorder.Position = UDim2.new(0, 0, 1, -2)
     bottomBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     bottomBorder.BorderSizePixel = 0
-    bottomBorder.Parent = frame
+    bottomBorder.Parent = border
 
-    -- Left border
     local leftBorder = Instance.new("Frame")
     leftBorder.Size = UDim2.new(0, 2, 1, 0)
     leftBorder.Position = UDim2.new(0, 0, 0, 0)
     leftBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     leftBorder.BorderSizePixel = 0
-    leftBorder.Parent = frame
+    leftBorder.Parent = border
 
-    -- Right border
     local rightBorder = Instance.new("Frame")
     rightBorder.Size = UDim2.new(0, 2, 1, 0)
     rightBorder.Position = UDim2.new(1, -2, 0, 0)
     rightBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     rightBorder.BorderSizePixel = 0
-    rightBorder.Parent = frame
+    rightBorder.Parent = border
 
-    -- Animation for red border (using TweenService)
-    local TweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, true)
-
-    -- Top border animation
+    -- Play animation for borders
     local topTween = TweenService:Create(topBorder, tweenInfo, {Size = UDim2.new(1, 0, 0, 2)})
-    -- Bottom border animation
     local bottomTween = TweenService:Create(bottomBorder, tweenInfo, {Size = UDim2.new(1, 0, 0, 2)})
-    -- Left border animation
     local leftTween = TweenService:Create(leftBorder, tweenInfo, {Size = UDim2.new(0, 2, 1, 0)})
-    -- Right border animation
     local rightTween = TweenService:Create(rightBorder, tweenInfo, {Size = UDim2.new(0, 2, 1, 0)})
 
-    -- Start animations
     topTween:Play()
     bottomTween:Play()
     leftTween:Play()
     rightTween:Play()
 end
 
--- Call function to create animated red border
+-- Call the border animation function
 createAnimatedBorder()
 
 -- Label with white text
