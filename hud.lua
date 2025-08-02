@@ -10,22 +10,21 @@ screenGui.Name = "MoneyRangeGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Create draggable frame with vibrant colors and smooth animations
+-- Create draggable frame with black background and red border
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 280, 0, 350)  -- Larger size to fit all elements
 frame.Position = UDim2.new(0.5, -140, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(34, 42, 53)  -- Dark background with color
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Black background
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
--- Add a gradient background for a colorful effect
-local gradient = Instance.new("UIGradient")
-gradient.Parent = frame
-gradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(85, 153, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 102, 102))
-})
-gradient.Rotation = 45
+-- Create the red border around the frame
+local border = Instance.new("Frame")
+border.Size = UDim2.new(1, 0, 1, 0)  -- Border covers the entire frame
+border.Position = UDim2.new(0, 0, 0, 0)
+border.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
+border.BorderSizePixel = 2  -- Thin border
+border.Parent = frame
 
 -- Draggable logic
 local dragging, dragInput, dragStart, startPos
@@ -66,25 +65,26 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
     end
 end)
 
--- Label with colorful text
+-- Label with white text
 local label = Instance.new("TextLabel")
 label.Size = UDim2.new(1, -40, 0, 20)
 label.Position = UDim2.new(0, 20, 0, 15)
 label.BackgroundTransparency = 1
 label.Text = "Select Money Range:"
-label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
 label.Font = Enum.Font.GothamBold
 label.TextSize = 18
 label.TextXAlignment = Enum.TextXAlignment.Left
 label.Parent = frame
 
--- Dropdown main button with color effects
+-- Dropdown main button with red border
 local dropdown = Instance.new("TextButton")
 dropdown.Size = UDim2.new(1, -40, 0, 40)
 dropdown.Position = UDim2.new(0, 20, 0, 40)
-dropdown.BackgroundColor3 = Color3.fromRGB(55, 135, 255)  -- Colorful background
-dropdown.BorderSizePixel = 0
-dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+dropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)  -- Dark gray background
+dropdown.BorderSizePixel = 2  -- Thin border to match the red border
+dropdown.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
+dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
 dropdown.Font = Enum.Font.GothamBold
 dropdown.TextSize = 18
 dropdown.Text = "1M+  ▼"
@@ -95,8 +95,9 @@ dropdown.Parent = frame
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
 optionsFrame.Position = UDim2.new(0, 20, 0, 80)
-optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 125, 250)
-optionsFrame.BorderSizePixel = 0
+optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- Dark gray background
+optionsFrame.BorderSizePixel = 2
+optionsFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
 optionsFrame.ClipsDescendants = true
 optionsFrame.Parent = frame
 
@@ -118,21 +119,14 @@ for i, range in ipairs(moneyRanges) do
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 40)
     btn.Position = UDim2.new(0, 0, 0, (i-1)*40)
-    btn.BackgroundColor3 = Color3.fromRGB(85, 165, 255)
+    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)  -- Darker gray background for options
     btn.BorderSizePixel = 0
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 18
     btn.Text = range
     btn.AutoButtonColor = false
     btn.Parent = optionsFrame
-
-    btn.MouseEnter:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(115, 195, 255)
-    end)
-    btn.MouseLeave:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(85, 165, 255)
-    end)
 
     btn.MouseButton1Click:Connect(function()
         dropdown.Text = range .. "  ▼"
@@ -141,36 +135,26 @@ for i, range in ipairs(moneyRanges) do
     end)
 end
 
--- Create animated buttons for Start and Stop
-local function createAnimatedButton(text, positionY)
+-- Create static Start and Stop buttons
+local function createButton(text, positionY)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -40, 0, 50)
     btn.Position = UDim2.new(0, 20, 0, positionY)
-    btn.BackgroundColor3 = Color3.fromRGB(60, 160, 255)
-    btn.BorderSizePixel = 0
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)  -- Dark gray background
+    btn.BorderSizePixel = 2  -- Red border around the button
+    btn.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 20
     btn.Text = text
     btn.AutoButtonColor = false
     btn.Parent = frame
 
-    -- Add animation effect on hover
-    btn.MouseEnter:Connect(function()
-        btn:TweenSize(UDim2.new(1, -40, 0, 60), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-        btn.BackgroundColor3 = Color3.fromRGB(85, 185, 255)
-    end)
-
-    btn.MouseLeave:Connect(function()
-        btn:TweenSize(UDim2.new(1, -40, 0, 50), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-        btn.BackgroundColor3 = Color3.fromRGB(60, 160, 255)
-    end)
-
     return btn
 end
 
-local startBtn = createAnimatedButton("Start", 150)
-local stopBtn = createAnimatedButton("Stop", 210)
+local startBtn = createButton("Start", 150)
+local stopBtn = createButton("Stop", 210)
 
 startBtn.MouseButton1Click:Connect(function()
     print("Start clicked")
