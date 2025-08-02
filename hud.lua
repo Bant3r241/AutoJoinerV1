@@ -12,9 +12,9 @@ screenGui.Parent = playerGui
 
 -- Create draggable frame
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 250, 0, 220)
-frame.Position = UDim2.new(0.5, -125, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(31, 35, 41)
+frame.Size = UDim2.new(0, 200, 0, 190)
+frame.Position = UDim2.new(0.5, -100, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
@@ -59,25 +59,25 @@ end)
 
 -- Label
 local label = Instance.new("TextLabel")
-label.Size = UDim2.new(1, -40, 0, 25)
+label.Size = UDim2.new(1, -40, 0, 20)
 label.Position = UDim2.new(0, 20, 0, 15)
 label.BackgroundTransparency = 1
 label.Text = "Select Money Range:"
-label.TextColor3 = Color3.fromRGB(200, 200, 200)
+label.TextColor3 = Color3.fromRGB(220, 220, 220)
 label.Font = Enum.Font.GothamSemibold
-label.TextSize = 18
+label.TextSize = 14
 label.TextXAlignment = Enum.TextXAlignment.Left
 label.Parent = frame
 
 -- Dropdown main button
 local dropdown = Instance.new("TextButton")
-dropdown.Size = UDim2.new(1, -40, 0, 35)
-dropdown.Position = UDim2.new(0, 20, 0, 45)
-dropdown.BackgroundColor3 = Color3.fromRGB(48, 52, 61)
+dropdown.Size = UDim2.new(1, -40, 0, 30)
+dropdown.Position = UDim2.new(0, 20, 0, 40)
+dropdown.BackgroundColor3 = Color3.fromRGB(57, 60, 64)
 dropdown.BorderSizePixel = 0
-dropdown.TextColor3 = Color3.fromRGB(230, 230, 230)
+dropdown.TextColor3 = Color3.fromRGB(220, 220, 220)
 dropdown.Font = Enum.Font.GothamSemibold
-dropdown.TextSize = 18
+dropdown.TextSize = 16
 dropdown.Text = "1M+  ▼"
 dropdown.AutoButtonColor = false
 dropdown.Parent = frame
@@ -85,8 +85,8 @@ dropdown.Parent = frame
 -- Dropdown container
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
-optionsFrame.Position = UDim2.new(0, 20, 0, 80)
-optionsFrame.BackgroundColor3 = Color3.fromRGB(48, 52, 61)
+optionsFrame.Position = UDim2.new(0, 20, 0, 70)
+optionsFrame.BackgroundColor3 = Color3.fromRGB(57, 60, 64)
 optionsFrame.BorderSizePixel = 0
 optionsFrame.ClipsDescendants = true
 optionsFrame.Parent = frame
@@ -98,7 +98,7 @@ local function toggleDropdown()
     if isOpen then
         optionsFrame:TweenSize(UDim2.new(1, -40, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
     else
-        optionsFrame:TweenSize(UDim2.new(1, -40, 0, #moneyRanges * 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
+        optionsFrame:TweenSize(UDim2.new(1, -40, 0, #moneyRanges * 30), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.25, true)
     end
     isOpen = not isOpen
 end
@@ -107,22 +107,22 @@ dropdown.MouseButton1Click:Connect(toggleDropdown)
 
 for i, range in ipairs(moneyRanges) do
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 35)
-    btn.Position = UDim2.new(0, 0, 0, (i-1)*35)
-    btn.BackgroundColor3 = Color3.fromRGB(38, 42, 51)
+    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.Position = UDim2.new(0, 0, 0, (i-1)*30)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 48, 52)
     btn.BorderSizePixel = 0
     btn.TextColor3 = Color3.fromRGB(220, 220, 220)
     btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 18
+    btn.TextSize = 16
     btn.Text = range
     btn.AutoButtonColor = false
     btn.Parent = optionsFrame
 
     btn.MouseEnter:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(58, 62, 71)
+        btn.BackgroundColor3 = Color3.fromRGB(65, 68, 72)
     end)
     btn.MouseLeave:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(38, 42, 51)
+        btn.BackgroundColor3 = Color3.fromRGB(45, 48, 52)
     end)
 
     btn.MouseButton1Click:Connect(function()
@@ -135,30 +135,30 @@ end
 -- Button creator with style
 local function createButton(text, positionY)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -40, 0, 40)
+    btn.Size = UDim2.new(1, -40, 0, 35)
     btn.Position = UDim2.new(0, 20, 0, positionY)
-    btn.BackgroundColor3 = Color3.fromRGB(48, 52, 61)
+    btn.BackgroundColor3 = Color3.fromRGB(57, 60, 64)
     btn.BorderSizePixel = 0
-    btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
     btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 20
+    btn.TextSize = 18
     btn.Text = text
     btn.AutoButtonColor = false
     btn.Parent = frame
 
     btn.MouseEnter:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(68, 72, 81)
+        btn.BackgroundColor3 = Color3.fromRGB(77, 80, 84)
     end)
     btn.MouseLeave:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(48, 52, 61)
+        btn.BackgroundColor3 = Color3.fromRGB(57, 60, 64)
     end)
 
     return btn
 end
 
-local startBtn = createButton("Start", 130)
-local pauseBtn = createButton("Pause", 180)
-local resumeBtn = createButton("Resume", 230)
+local startBtn = createButton("Start", 105)
+local pauseBtn = createButton("Pause", 145)
+local resumeBtn = createButton("Resume", 185)
 
 startBtn.MouseButton1Click:Connect(function()
     print("Start clicked")
