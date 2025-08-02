@@ -171,11 +171,11 @@ end)
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
 minimizeBtn.Position = UDim2.new(0, 20, 0, 20)  -- Positioned outside the main frame
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red background for minimize button
-minimizeBtn.Text = "-"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Black background for minimize button
+minimizeBtn.Text = "-"  -- White "-" for minimize button
 minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
 minimizeBtn.Font = Enum.Font.GothamBold
-minimizeBtn.TextSize = 20
+minimizeBtn.TextSize = 24
 minimizeBtn.AutoButtonColor = false
 minimizeBtn.Parent = screenGui  -- Added to screenGui, not inside the frame
 
