@@ -167,14 +167,14 @@ stopBtn.MouseButton1Click:Connect(function()
     -- Add any stop functionality here
 end)
 
--- Minimize Button with image (Internet Fail Cat)
+-- Minimize Button with the image (Internet Fail Cat)
 local minimizeBtn = Instance.new("ImageButton")
 minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
-minimizeBtn.Position = UDim2.new(0, 20, 0, 20)  -- Positioned outside the main frame
+minimizeBtn.Position = UDim2.new(1, -40, 0, 0)  -- Positioned inside the frame at top right
 minimizeBtn.BackgroundTransparency = 1
 minimizeBtn.Image = "rbxassetid://2398054"  -- Image link to the Internet Fail Cat
 minimizeBtn.AutoButtonColor = false
-minimizeBtn.Parent = screenGui  -- Added to screenGui, not inside the frame
+minimizeBtn.Parent = frame
 
 -- Image for Minimized state (Visible after minimizing)
 local minimizedImage = Instance.new("ImageButton")
