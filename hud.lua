@@ -10,81 +10,116 @@ screenGui.Name = "MoneyRangeGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Create draggable frame with black background
+-- Create draggable frame with purple background
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 400)  -- Set initial size
+frame.Size = UDim2.new(0, 300, 0, 400)  -- Size to fit elements
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Black background
+frame.BackgroundColor3 = Color3.fromRGB(85, 26, 139)  -- Purple background
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
--- Create a UIListLayout to handle automatic resizing when dropdown opens/closes
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 10)  -- Adds some space between elements
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Parent = frame
-
 -- Function to create animated red border around the frame
 local function createAnimatedBorder()
-    local TweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, true)
-
-    -- Create borders (Top, Bottom, Left, Right)
-    local border = Instance.new("Frame")
-    border.Size = UDim2.new(1, 0, 1, 0)
-    border.Position = UDim2.new(0, 0, 0, 0)
-    border.BackgroundTransparency = 1
-    border.Parent = frame
-
+    -- Top border
     local topBorder = Instance.new("Frame")
     topBorder.Size = UDim2.new(1, 0, 0, 2)
     topBorder.Position = UDim2.new(0, 0, 0, 0)
-    topBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    topBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red color
     topBorder.BorderSizePixel = 0
-    topBorder.Parent = border
+    topBorder.Parent = frame
 
+    -- Bottom border
     local bottomBorder = Instance.new("Frame")
     bottomBorder.Size = UDim2.new(1, 0, 0, 2)
     bottomBorder.Position = UDim2.new(0, 0, 1, -2)
     bottomBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     bottomBorder.BorderSizePixel = 0
-    bottomBorder.Parent = border
+    bottomBorder.Parent = frame
 
+    -- Left border
     local leftBorder = Instance.new("Frame")
     leftBorder.Size = UDim2.new(0, 2, 1, 0)
     leftBorder.Position = UDim2.new(0, 0, 0, 0)
     leftBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     leftBorder.BorderSizePixel = 0
-    leftBorder.Parent = border
+    leftBorder.Parent = frame
 
+    -- Right border
     local rightBorder = Instance.new("Frame")
     rightBorder.Size = UDim2.new(0, 2, 1, 0)
     rightBorder.Position = UDim2.new(1, -2, 0, 0)
     rightBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     rightBorder.BorderSizePixel = 0
-    rightBorder.Parent = border
+    rightBorder.Parent = frame
 
-    -- Play animation for borders
+    -- Animation for red border (using TweenService)
+    local TweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, true)
+
+    -- Top border animation
     local topTween = TweenService:Create(topBorder, tweenInfo, {Size = UDim2.new(1, 0, 0, 2)})
+    -- Bottom border animation
     local bottomTween = TweenService:Create(bottomBorder, tweenInfo, {Size = UDim2.new(1, 0, 0, 2)})
+    -- Left border animation
     local leftTween = TweenService:Create(leftBorder, tweenInfo, {Size = UDim2.new(0, 2, 1, 0)})
+    -- Right border animation
     local rightTween = TweenService:Create(rightBorder, tweenInfo, {Size = UDim2.new(0, 2, 1, 0)})
 
+    -- Start animations
     topTween:Play()
     bottomTween:Play()
     leftTween:Play()
     rightTween:Play()
 end
 
--- Call the border animation function
+-- Call function to create animated red border
 createAnimatedBorder()
+
+-- Draggable logic
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    frame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
 
 -- Label with white text
 local label = Instance.new("TextLabel")
 label.Size = UDim2.new(1, -40, 0, 20)
 label.Position = UDim2.new(0, 20, 0, 15)
 label.BackgroundTransparency = 1
-label.Text = "Select Money Range:"
+label.Text = "Select Money Filter:"
 label.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
 label.Font = Enum.Font.GothamBold
 label.TextSize = 18
@@ -101,7 +136,7 @@ dropdown.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
 dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
 dropdown.Font = Enum.Font.GothamBold
 dropdown.TextSize = 18
-dropdown.Text = "1M+  ▼"
+dropdown.Text = "1M-3M  ▼"
 dropdown.AutoButtonColor = false
 dropdown.Parent = frame
 
@@ -115,7 +150,7 @@ optionsFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
 optionsFrame.ClipsDescendants = true
 optionsFrame.Parent = frame
 
-local moneyRanges = {"1M+", "10M+", "100M+", "1B+", "10B+"}
+local moneyRanges = {"1M-3M", "3M-10M"}
 local isOpen = false
 
 local function toggleDropdown()
@@ -167,13 +202,15 @@ local function createButton(text, positionY)
     return btn
 end
 
-local startBtn = createButton("Start", 180)
-local stopBtn = createButton("Stop", 230)
+local startBtn = createButton("Start", 250)
+local stopBtn = createButton("Stop", 300)
 
 startBtn.MouseButton1Click:Connect(function()
     print("Start clicked")
+    -- Add any start functionality here
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
     print("Stop clicked")
+    -- Add any stop functionality here
 end)
