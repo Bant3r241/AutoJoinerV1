@@ -2,11 +2,15 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer or Players:GetPlayers()[1]
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 local playerGui = player:WaitForChild("PlayerGui")
+
+-- WebSocket Configuration
+local WEBSOCKET_URL = "wss://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/"
+local socket = nil
+local RECONNECT_DELAY = 5 -- seconds
 
 -- Create main ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -78,7 +82,7 @@ local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -40, 0, 20)
 statusLabel.Position = UDim2.new(0, 20, 0, 50)
 statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "Status: Idle"
+statusLabel.Text = "Status: Disconnected"
 statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.TextSize = 14
@@ -151,7 +155,6 @@ for i, range in ipairs(mpsRanges) do
         mpsDropdown.Text = range .. "  ▼"
         selectedMpsRange = range
         toggleDropdown()
-        print("Selected MPS range:", range)
     end)
 end
 
@@ -202,15 +205,12 @@ minimizedImage.MouseButton1Click:Connect(function()
     minimizedImage.Visible = false
 end)
 
--- ========== Improved Server Hopping Logic ==========
+-- ========== WebSocket Auto-Joiner Logic ==========
 
-local PLACE_ID = 109983668079237 -- Your Roblox place ID
-local JOBID_ENDPOINT = "https://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev" -- Removed trailing slash
-
+local PLACE_ID = game.PlaceId
 local isRunning = false
 local currentJobIdIndex = 0
 local jobIds = {}
-local hoppingTask
 local teleportAttempts = 0
 local MAX_TELEPORT_ATTEMPTS = 5
 
@@ -219,49 +219,49 @@ local function updateStatus(text, color)
     statusLabel.TextColor3 = color or Color3.fromRGB(200, 200, 200)
 end
 
--- Improved fetch with retry logic
-local function fetchJobIds()
-    local attempts = 0
-    local maxAttempts = 3
-    local delayBetweenAttempts = 2
+local function connectWebSocket()
+    updateStatus("Connecting...", Color3.fromRGB(255, 255, 0))
     
-    while attempts < maxAttempts do
-        attempts += 1
-        
-        local success, response = pcall(function()
-            updateStatus("Fetching servers...", Color3.fromRGB(255, 255, 0))
-            return HttpService:GetAsync(JOBID_ENDPOINT)
+    local newSocket = WebSocket.connect(WEBSOCKET_URL)
+    
+    newSocket.OnMessage:Connect(function(message)
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(message)
         end)
         
-        if success then
-            local ok, data = pcall(function()
-                return HttpService:JSONDecode(response)
-            end)
+        if success and data and data.jobIds then
+            jobIds = data.jobIds
+            updateStatus("Connected - "..#jobIds.." servers", Color3.fromRGB(0, 255, 0))
             
-            if ok and type(data) == "table" and #data > 0 then
-                updateStatus("Fetched "..#data.." servers", Color3.fromRGB(0, 255, 0))
-                return data
-            else
-                warn("Failed to decode job ids JSON or data not a table")
+            if isRunning and #jobIds > 0 then
+                serverHop()
             end
-        else
-            warn("Attempt "..attempts.." failed to fetch job ids:", response)
         end
-        
-        if attempts < maxAttempts then
-            task.wait(delayBetweenAttempts)
-        end
-    end
+    end)
     
-    updateStatus("Fetch failed", Color3.fromRGB(255, 0, 0))
-    return nil
+    newSocket.OnClose:Connect(function()
+        if isRunning then
+            warn("Connection closed - attempting reconnect in "..RECONNECT_DELAY.."s")
+            updateStatus("Reconnecting...", Color3.fromRGB(255, 165, 0))
+            task.wait(RECONNECT_DELAY)
+            socket = connectWebSocket()
+        else
+            updateStatus("Disconnected", Color3.fromRGB(255, 100, 100))
+        end
+    end)
+    
+    newSocket.OnError:Connect(function(error)
+        warn("WebSocket error:", error)
+        updateStatus("Connection error", Color3.fromRGB(255, 0, 0))
+    end)
+    
+    return newSocket
 end
 
--- Improved server hop with error handling
 local function serverHop()
     if #jobIds == 0 then
         warn("No job ids available for teleport")
-        updateStatus("No servers found", Color3.fromRGB(255, 0, 0))
+        updateStatus("No servers available", Color3.fromRGB(255, 0, 0))
         return false
     end
     
@@ -281,77 +281,39 @@ local function serverHop()
     if not success then
         warn("Teleport failed:", err)
         updateStatus("Teleport failed", Color3.fromRGB(255, 0, 0))
+        teleportAttempts = teleportAttempts + 1
         return false
     end
     
+    teleportAttempts = 0
     return true
 end
 
 startBtn.MouseButton1Click:Connect(function()
-    if isRunning then
-        print("AutoJoiner already running")
-        return
-    end
+    if isRunning then return end
     
     isRunning = true
     teleportAttempts = 0
     updateStatus("Starting...", Color3.fromRGB(0, 255, 255))
-    print("AutoJoiner started")
-
-    -- Spawn the loop that fetches jobIds and teleports
-    hoppingTask = task.spawn(function()
-        while isRunning and teleportAttempts < MAX_TELEPORT_ATTEMPTS do
-            print("Fetching job IDs...")
-            local fetchedJobIds = fetchJobIds()
-
-            if fetchedJobIds and #fetchedJobIds > 0 then
-                jobIds = fetchedJobIds
-                if serverHop() then
-                    teleportAttempts = 0
-                else
-                    teleportAttempts += 1
-                end
-            else
-                warn("No valid job ids fetched")
-                teleportAttempts += 1
-            end
-
-            if isRunning then
-                -- Wait between attempts, but check isRunning frequently
-                local waitTime = 0
-                while waitTime < 5 and isRunning do
-                    task.wait(0.5)
-                    waitTime += 0.5
-                end
-            end
-        end
-        
-        if teleportAttempts >= MAX_TELEPORT_ATTEMPTS then
-            updateStatus("Max attempts reached", Color3.fromRGB(255, 0, 0))
-            warn("Max teleport attempts reached")
-        end
-        
-        isRunning = false
-        print("AutoJoiner loop ended")
-    end)
+    
+    -- Connect WebSocket
+    socket = connectWebSocket()
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
-    if not isRunning then
-        print("AutoJoiner is not running")
-        return
-    end
+    if not isRunning then return end
+    
     isRunning = false
+    if socket then
+        socket:Close()
+        socket = nil
+    end
     updateStatus("Stopped", Color3.fromRGB(255, 100, 100))
-    print("AutoJoiner stopped")
 end)
 
--- Clean up on player leaving
+-- Clean up when player leaves
 player.AncestryChanged:Connect(function(_, parent)
-    if not parent then
-        isRunning = false
-        if hoppingTask then
-            task.cancel(hoppingTask)
-        end
+    if not parent and socket then
+        socket:Close()
     end
 end)
