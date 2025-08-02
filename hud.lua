@@ -167,34 +167,35 @@ stopBtn.MouseButton1Click:Connect(function()
     -- Add any stop functionality here
 end)
 
--- Minimize Button
+-- Minimize Button outside the frame (This stays separate)
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
-minimizeBtn.Position = UDim2.new(1, -40, 0, 0)
+minimizeBtn.Position = UDim2.new(0, 20, 0, 20)  -- Positioned outside the main frame
 minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red background for minimize button
 minimizeBtn.Text = "-"
 minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
 minimizeBtn.Font = Enum.Font.GothamBold
 minimizeBtn.TextSize = 20
 minimizeBtn.AutoButtonColor = false
-minimizeBtn.Parent = frame
+minimizeBtn.Parent = screenGui  -- Added to screenGui, not inside the frame
 
--- Image for Minimized state
+-- Image for Minimized state (Visible after minimizing)
 local minimizedImage = Instance.new("ImageButton")
 minimizedImage.Size = UDim2.new(0, 40, 0, 40)
-minimizedImage.Position = UDim2.new(1, -40, 0, 0)
+minimizedImage.Position = UDim2.new(0, 20, 0, 20)  -- Positioned outside the frame
 minimizedImage.BackgroundTransparency = 1
-minimizedImage.Image = "rbxassetid://2398054"  -- Test Image (Default Roblox image)
+minimizedImage.Image = "rbxassetid://2398054"  -- Test Image (Internet Fail Cat)
 minimizedImage.Visible = false  -- Initially hidden
-minimizedImage.Parent = screenGui  -- Put the minimized image inside screenGui, not frame
+minimizedImage.Parent = screenGui  -- Parent it to the screenGui
 
--- Toggle the visibility of the GUI
+-- Minimize logic: Hide frame, show image
 minimizeBtn.MouseButton1Click:Connect(function()
-    frame.Visible = false
-    minimizedImage.Visible = true
+    frame.Visible = false  -- Hide the main frame
+    minimizedImage.Visible = true  -- Show the minimized image
 end)
 
+-- Restore logic: Hide the minimized image, show the main frame
 minimizedImage.MouseButton1Click:Connect(function()
-    frame.Visible = true
-    minimizedImage.Visible = false
+    frame.Visible = true  -- Show the main frame again
+    minimizedImage.Visible = false  -- Hide the minimized image
 end)
