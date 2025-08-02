@@ -167,15 +167,12 @@ stopBtn.MouseButton1Click:Connect(function()
     -- Add any stop functionality here
 end)
 
--- Minimize Button outside the frame (This stays separate)
-local minimizeBtn = Instance.new("TextButton")
+-- Minimize Button with image (Internet Fail Cat)
+local minimizeBtn = Instance.new("ImageButton")
 minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
 minimizeBtn.Position = UDim2.new(0, 20, 0, 20)  -- Positioned outside the main frame
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Black background for minimize button
-minimizeBtn.Text = "-"  -- White "-" for minimize button
-minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
-minimizeBtn.Font = Enum.Font.GothamBold
-minimizeBtn.TextSize = 24
+minimizeBtn.BackgroundTransparency = 1
+minimizeBtn.Image = "rbxassetid://2398054"  -- Image link to the Internet Fail Cat
 minimizeBtn.AutoButtonColor = false
 minimizeBtn.Parent = screenGui  -- Added to screenGui, not inside the frame
 
