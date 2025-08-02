@@ -184,4 +184,17 @@ local minimizedImage = Instance.new("ImageButton")
 minimizedImage.Size = UDim2.new(0, 40, 0, 40)
 minimizedImage.Position = UDim2.new(1, -40, 0, 0)
 minimizedImage.BackgroundTransparency = 1
-minimizedImage.Image = "rbxassetid://2398054"  -- Test Image (Default
+minimizedImage.Image = "rbxassetid://2398054"  -- Test Image (Default Roblox image)
+minimizedImage.Visible = false  -- Initially hidden
+minimizedImage.Parent = screenGui  -- Put the minimized image inside screenGui, not frame
+
+-- Toggle the visibility of the GUI
+minimizeBtn.MouseButton1Click:Connect(function()
+    frame.Visible = false
+    minimizedImage.Visible = true
+end)
+
+minimizedImage.MouseButton1Click:Connect(function()
+    frame.Visible = true
+    minimizedImage.Visible = false
+end)
