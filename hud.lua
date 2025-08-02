@@ -173,7 +173,8 @@ local UserInputService = game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed then
         if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.G then
-            screenGui.Enabled = not screenGui.Enabled  -- Toggle GUI visibility
+            screenGui.Enabled = false  -- Close the GUI
         end
     end
 end)
+
