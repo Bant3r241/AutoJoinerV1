@@ -10,70 +10,13 @@ screenGui.Name = "MoneyRangeGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Create draggable frame with purple background
+-- Create draggable frame with darker purple background
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 300, 0, 400)  -- Size to fit elements
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(85, 26, 139)  -- Purple background
+frame.BackgroundColor3 = Color3.fromRGB(52, 11, 98)  -- Darker purple background
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
-
--- Function to create animated red border around the frame
-local function createAnimatedBorder()
-    -- Top border
-    local topBorder = Instance.new("Frame")
-    topBorder.Size = UDim2.new(1, 0, 0, 2)
-    topBorder.Position = UDim2.new(0, 0, 0, 0)
-    topBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red color
-    topBorder.BorderSizePixel = 0
-    topBorder.Parent = frame
-
-    -- Bottom border
-    local bottomBorder = Instance.new("Frame")
-    bottomBorder.Size = UDim2.new(1, 0, 0, 2)
-    bottomBorder.Position = UDim2.new(0, 0, 1, -2)
-    bottomBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    bottomBorder.BorderSizePixel = 0
-    bottomBorder.Parent = frame
-
-    -- Left border
-    local leftBorder = Instance.new("Frame")
-    leftBorder.Size = UDim2.new(0, 2, 1, 0)
-    leftBorder.Position = UDim2.new(0, 0, 0, 0)
-    leftBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    leftBorder.BorderSizePixel = 0
-    leftBorder.Parent = frame
-
-    -- Right border
-    local rightBorder = Instance.new("Frame")
-    rightBorder.Size = UDim2.new(0, 2, 1, 0)
-    rightBorder.Position = UDim2.new(1, -2, 0, 0)
-    rightBorder.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    rightBorder.BorderSizePixel = 0
-    rightBorder.Parent = frame
-
-    -- Animation for red border (using TweenService)
-    local TweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, -1, true)
-
-    -- Top border animation
-    local topTween = TweenService:Create(topBorder, tweenInfo, {Size = UDim2.new(1, 0, 0, 2)})
-    -- Bottom border animation
-    local bottomTween = TweenService:Create(bottomBorder, tweenInfo, {Size = UDim2.new(1, 0, 0, 2)})
-    -- Left border animation
-    local leftTween = TweenService:Create(leftBorder, tweenInfo, {Size = UDim2.new(0, 2, 1, 0)})
-    -- Right border animation
-    local rightTween = TweenService:Create(rightBorder, tweenInfo, {Size = UDim2.new(0, 2, 1, 0)})
-
-    -- Start animations
-    topTween:Play()
-    bottomTween:Play()
-    leftTween:Play()
-    rightTween:Play()
-end
-
--- Call function to create animated red border
-createAnimatedBorder()
 
 -- Draggable logic
 local dragging, dragInput, dragStart, startPos
@@ -126,13 +69,12 @@ label.TextSize = 18
 label.TextXAlignment = Enum.TextXAlignment.Left
 label.Parent = frame
 
--- Dropdown main button with red border
+-- Dropdown main button
 local dropdown = Instance.new("TextButton")
 dropdown.Size = UDim2.new(1, -40, 0, 40)
 dropdown.Position = UDim2.new(0, 20, 0, 40)
 dropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)  -- Dark gray background
-dropdown.BorderSizePixel = 2  -- Thin red border
-dropdown.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
+dropdown.BorderSizePixel = 0  -- No border
 dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
 dropdown.Font = Enum.Font.GothamBold
 dropdown.TextSize = 18
@@ -145,8 +87,7 @@ local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
 optionsFrame.Position = UDim2.new(0, 20, 0, 80)
 optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- Dark gray background
-optionsFrame.BorderSizePixel = 2
-optionsFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
+optionsFrame.BorderSizePixel = 0  -- No border
 optionsFrame.ClipsDescendants = true
 optionsFrame.Parent = frame
 
@@ -190,8 +131,7 @@ local function createButton(text, positionY)
     btn.Size = UDim2.new(1, -40, 0, 40)
     btn.Position = UDim2.new(0, 20, 0, positionY)
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    btn.BorderSizePixel = 2  -- Red border around the button
-    btn.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
+    btn.BorderSizePixel = 0  -- No border
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 20
@@ -214,3 +154,15 @@ stopBtn.MouseButton1Click:Connect(function()
     print("Stop clicked")
     -- Add any stop functionality here
 end)
+
+-- Add "Made By BrainGPT" text
+local madeByLabel = Instance.new("TextLabel")
+madeByLabel.Size = UDim2.new(1, -40, 0, 20)
+madeByLabel.Position = UDim2.new(0, 20, 1, -30)
+madeByLabel.BackgroundTransparency = 1
+madeByLabel.Text = "Made By BrainGPT"
+madeByLabel.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+madeByLabel.Font = Enum.Font.GothamBold
+madeByLabel.TextSize = 14
+madeByLabel.TextXAlignment = Enum.TextXAlignment.Left
+madeByLabel.Parent = frame
