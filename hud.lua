@@ -167,14 +167,35 @@ stopBtn.MouseButton1Click:Connect(function()
     -- Add any stop functionality here
 end)
 
--- Keybind to close the GUI (G key)
-local UserInputService = game:GetService("UserInputService")
+-- Minimize Button
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
+minimizeBtn.Position = UDim2.new(1, -40, 0, 0)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red background for minimize button
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 20
+minimizeBtn.AutoButtonColor = false
+minimizeBtn.Parent = frame
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed then
-        if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.G then
-            screenGui.Enabled = false  -- Close the GUI
-        end
-    end
+-- Image for Minimized state
+local minimizedImage = Instance.new("ImageButton")
+minimizedImage.Size = UDim2.new(0, 40, 0, 40)
+minimizedImage.Position = UDim2.new(1, -40, 0, 0)
+minimizedImage.BackgroundTransparency = 1
+minimizedImage.Image = "rbxassetid://2398054"  -- Placeholder for image (update with your own asset ID)
+minimizedImage.Visible = false  -- Initially hidden
+minimizedImage.Parent = frame
+
+-- Toggle the visibility of the GUI
+minimizeBtn.MouseButton1Click:Connect(function()
+    frame.Visible = false
+    minimizedImage.Visible = true
+end)
+
+minimizedImage.MouseButton1Click:Connect(function()
+    frame.Visible = true
+    minimizedImage.Visible = false
 end)
 
