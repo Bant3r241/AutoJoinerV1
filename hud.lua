@@ -187,9 +187,9 @@ end
 -- Create static Start and Stop buttons
 local function createButton(text, positionY)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -40, 0, 50)
+    btn.Size = UDim2.new(1, -40, 0, 40)
     btn.Position = UDim2.new(0, 20, 0, positionY)
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)  -- Dark gray background
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     btn.BorderSizePixel = 2  -- Red border around the button
     btn.BorderColor3 = Color3.fromRGB(255, 0, 0)  -- Red border
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
@@ -202,8 +202,8 @@ local function createButton(text, positionY)
     return btn
 end
 
-local startBtn = createButton("Start", 150)
-local stopBtn = createButton("Stop", 210)
+local startBtn = createButton("Start", 250)
+local stopBtn = createButton("Stop", 300)
 
 startBtn.MouseButton1Click:Connect(function()
     print("Start clicked")
