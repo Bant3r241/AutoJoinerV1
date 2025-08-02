@@ -15,9 +15,9 @@ screenGui.Parent = playerGui
 
 -- Create draggable frame with black background
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 400)  -- Size to fit elements
+frame.Size = UDim2.new(0, 300, 0, 400)
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Dark black background
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
@@ -60,13 +60,13 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
     end
 end)
 
--- Title Label: AutoJoiner
+-- Title Label
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -40, 0, 40)
 titleLabel.Position = UDim2.new(0, 20, 0, 15)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "AutoJoiner"
-titleLabel.TextColor3 = Color3.fromRGB(90, 0, 90)  -- Dark purple
+titleLabel.TextColor3 = Color3.fromRGB(90, 0, 90)
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 22
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -78,19 +78,19 @@ mpsLabel.Size = UDim2.new(1, -40, 0, 20)
 mpsLabel.Position = UDim2.new(0, 20, 0, 60)
 mpsLabel.BackgroundTransparency = 1
 mpsLabel.Text = "Select MPS Range:"
-mpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+mpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 mpsLabel.Font = Enum.Font.GothamBold
 mpsLabel.TextSize = 18
 mpsLabel.TextXAlignment = Enum.TextXAlignment.Left
 mpsLabel.Parent = frame
 
--- MPS Dropdown
+-- MPS Dropdown Button
 local mpsDropdown = Instance.new("TextButton")
 mpsDropdown.Size = UDim2.new(1, -40, 0, 40)
 mpsDropdown.Position = UDim2.new(0, 20, 0, 85)
-mpsDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)  -- Dark gray background
+mpsDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 mpsDropdown.BorderSizePixel = 0
-mpsDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+mpsDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
 mpsDropdown.Font = Enum.Font.GothamBold
 mpsDropdown.TextSize = 18
 mpsDropdown.Text = "1M-3M  ▼"
@@ -101,13 +101,14 @@ mpsDropdown.Parent = frame
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
 optionsFrame.Position = UDim2.new(0, 20, 0, 125)
-optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- Dark gray background
+optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 optionsFrame.BorderSizePixel = 0
 optionsFrame.ClipsDescendants = true
 optionsFrame.Parent = frame
 
 local mpsRanges = {"1M-3M", "3M+"}
 local isOpen = false
+local selectedMpsRange = mpsRanges[1]  -- default selection
 
 local function toggleDropdown()
     if isOpen then
@@ -123,10 +124,10 @@ mpsDropdown.MouseButton1Click:Connect(toggleDropdown)
 for i, range in ipairs(mpsRanges) do
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 40)
-    btn.Position = UDim2.new(0, 0, 0, (i-1)*40)
-    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)  -- Dark gray background for options
+    btn.Position = UDim2.new(0, 0, 0, (i - 1) * 40)
+    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
     btn.BorderSizePixel = 0
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 18
     btn.Text = range
@@ -135,71 +136,69 @@ for i, range in ipairs(mpsRanges) do
 
     btn.MouseButton1Click:Connect(function()
         mpsDropdown.Text = range .. "  ▼"
+        selectedMpsRange = range
         toggleDropdown()
         print("Selected MPS range:", range)
-        -- You can store this selection for filtering logic later if needed
     end)
 end
 
--- Start and Stop buttons
+-- Start and Stop buttons creator
 local function createButton(text, positionY)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -40, 0, 40)
     btn.Position = UDim2.new(0, 20, 0, positionY)
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    btn.BorderSizePixel = 0  -- No border
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+    btn.BorderSizePixel = 0
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 20
     btn.Text = text
     btn.AutoButtonColor = false
     btn.Parent = frame
-
     return btn
 end
 
 local startBtn = createButton("Start", 190)
 local stopBtn = createButton("Stop", 240)
 
--- Minimize Button with the image (Internet Fail Cat)
+-- Minimize Button
 local minimizeBtn = Instance.new("ImageButton")
 minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
-minimizeBtn.Position = UDim2.new(1, -40, 0, 0)  -- Positioned inside the frame at top right
+minimizeBtn.Position = UDim2.new(1, -40, 0, 0)
 minimizeBtn.BackgroundTransparency = 1
-minimizeBtn.Image = "rbxassetid://2398054"  -- Image link to the Internet Fail Cat
+minimizeBtn.Image = "rbxassetid://2398054"
 minimizeBtn.AutoButtonColor = false
 minimizeBtn.Parent = frame
 
--- Image for Minimized state (Visible after minimizing)
+-- Minimized Image Button
 local minimizedImage = Instance.new("ImageButton")
 minimizedImage.Size = UDim2.new(0, 40, 0, 40)
-minimizedImage.Position = UDim2.new(0, 20, 0, 20)  -- Positioned outside the frame
+minimizedImage.Position = UDim2.new(0, 20, 0, 20)
 minimizedImage.BackgroundTransparency = 1
-minimizedImage.Image = "rbxassetid://2398054"  -- Test Image (Internet Fail Cat)
-minimizedImage.Visible = false  -- Initially hidden
-minimizedImage.Parent = screenGui  -- Parent it to the screenGui
+minimizedImage.Image = "rbxassetid://2398054"
+minimizedImage.Visible = false
+minimizedImage.Parent = screenGui
 
--- Minimize logic: Hide frame, show image
 minimizeBtn.MouseButton1Click:Connect(function()
-    frame.Visible = false  -- Hide the main frame
-    minimizedImage.Visible = true  -- Show the minimized image
+    frame.Visible = false
+    minimizedImage.Visible = true
 end)
 
--- Restore logic: Hide the minimized image, show the main frame
 minimizedImage.MouseButton1Click:Connect(function()
-    frame.Visible = true  -- Show the main frame again
-    minimizedImage.Visible = false  -- Hide the minimized image
+    frame.Visible = true
+    minimizedImage.Visible = false
 end)
 
--- ================== Server Hopping Logic ==================
+-- ========== Server Hopping Logic ==========
 
-local PLACE_ID = 109983668079237 -- << REPLACE this with your actual Roblox Place ID
-local JOBID_ENDPOINT = "https://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/" -- Your Replit endpoint URL
+local PLACE_ID = 109983668079237 -- Replace with your Roblox place ID
+local JOBID_ENDPOINT = "https://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/" -- Your endpoint
 
 local isRunning = false
 local currentJobIdIndex = 0
 local jobIds = {}
 
+-- Fetch job IDs from your endpoint
 local function fetchJobIds()
     local success, response = pcall(function()
         return HttpService:GetAsync(JOBID_ENDPOINT)
@@ -219,6 +218,7 @@ local function fetchJobIds()
     return nil
 end
 
+-- Server hop to next jobId
 local function serverHop()
     if #jobIds == 0 then
         warn("No job ids available for teleport")
@@ -239,31 +239,38 @@ local hoppingTask
 
 startBtn.MouseButton1Click:Connect(function()
     if isRunning then
-        print("Already running")
+        print("AutoJoiner already running")
         return
     end
     isRunning = true
-    print("Started AutoJoiner")
+    print("AutoJoiner started")
 
+    -- Spawn the loop that fetches jobIds and teleports
     hoppingTask = task.spawn(function()
         while isRunning do
+            print("Fetching job IDs...")
             local fetchedJobIds = fetchJobIds()
+
+            -- OPTIONAL: Filter job IDs by selected MPS range here if your server returns MPS data
+            -- For now, we just assign fetched IDs directly
             if fetchedJobIds and #fetchedJobIds > 0 then
                 jobIds = fetchedJobIds
                 serverHop()
             else
                 warn("No valid job ids fetched")
             end
-            wait(5)  -- wait 5 seconds before next fetch/teleport
+
+            wait(5) -- Wait 5 seconds before next fetch/teleport
         end
+        print("AutoJoiner loop ended")
     end)
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
     if not isRunning then
-        print("Not running")
+        print("AutoJoiner is not running")
         return
     end
     isRunning = false
-    print("Stopped AutoJoiner")
+    print("AutoJoiner stopped")
 end)
