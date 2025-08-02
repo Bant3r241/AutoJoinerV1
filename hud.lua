@@ -10,10 +10,10 @@ screenGui.Name = "MoneyRangeGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Create draggable frame
+-- Create draggable frame (increased size)
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 190)
-frame.Position = UDim2.new(0.5, -100, 0.3, 0)
+frame.Size = UDim2.new(0, 250, 0, 300)  -- Increased width and height to accommodate all options
+frame.Position = UDim2.new(0.5, -125, 0.3, 0)  -- Adjusted for new size
 frame.BackgroundColor3 = Color3.fromRGB(27, 27, 27)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
@@ -82,7 +82,7 @@ dropdown.Text = "1M+  ▼"
 dropdown.AutoButtonColor = false
 dropdown.Parent = frame
 
--- Dropdown container
+-- Dropdown container (increased size to fit more options)
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
 optionsFrame.Position = UDim2.new(0, 20, 0, 70)
@@ -91,7 +91,7 @@ optionsFrame.BorderSizePixel = 0
 optionsFrame.ClipsDescendants = true
 optionsFrame.Parent = frame
 
-local moneyRanges = {"1M+", "10M+", "100M+", "1B+", "10B+"}
+local moneyRanges = {"1M+", "10M+", "100M+", "1B+", "10B+", "50B+"}  -- Added more range options
 local isOpen = false
 
 local function toggleDropdown()
@@ -156,9 +156,9 @@ local function createButton(text, positionY)
     return btn
 end
 
-local startBtn = createButton("Start", 105)
-local pauseBtn = createButton("Pause", 145)
-local resumeBtn = createButton("Resume", 185)
+local startBtn = createButton("Start", 175)  -- Adjusted button positions to fit the new size
+local pauseBtn = createButton("Pause", 215)
+local resumeBtn = createButton("Resume", 255)
 
 startBtn.MouseButton1Click:Connect(function()
     print("Start clicked")
