@@ -1,4 +1,4 @@
--- AutoJoiner with Perfect Dropdown Layout
+-- AutoJoiner with Perfect Non-Overlapping Dropdown Layout
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -20,14 +20,14 @@ local activeJobId = nil
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Main GUI
+-- Main GUI (Increased height to prevent overlap)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AutoJoinerGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 400) -- Adjusted height
+frame.Size = UDim2.new(0, 300, 0, 450) -- Increased height
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
@@ -132,9 +132,10 @@ mpsDropdown.Text = "1M-3M  ▼"
 mpsDropdown.AutoButtonColor = false
 mpsDropdown.Parent = frame
 
+-- Dropdown Options Frame (Positioned with safe spacing)
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
-optionsFrame.Position = UDim2.new(0, 20, 0, 175)
+optionsFrame.Position = UDim2.new(0, 20, 0, 175) -- Adjusted position
 optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 optionsFrame.BorderSizePixel = 0
 optionsFrame.ClipsDescendants = true
@@ -179,10 +180,10 @@ for i, range in ipairs(mpsRanges) do
     end)
 end
 
--- Start/Stop Buttons (Positioned below dropdown)
+-- Start/Stop Buttons (Positioned safely below dropdown)
 local startBtn = Instance.new("TextButton")
 startBtn.Size = UDim2.new(1, -40, 0, 40)
-startBtn.Position = UDim2.new(0, 20, 0, 230) -- Adjusted position
+startBtn.Position = UDim2.new(0, 20, 0, 260) -- Moved further down
 startBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 startBtn.BorderSizePixel = 0
 startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -194,7 +195,7 @@ startBtn.Parent = frame
 
 local stopBtn = Instance.new("TextButton")
 stopBtn.Size = UDim2.new(1, -40, 0, 40)
-stopBtn.Position = UDim2.new(0, 20, 0, 280) -- Adjusted position
+stopBtn.Position = UDim2.new(0, 20, 0, 310) -- Moved further down
 stopBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 stopBtn.BorderSizePixel = 0
 stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
