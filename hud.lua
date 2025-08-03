@@ -1,26 +1,14 @@
--- Rainbow Animated AutoJoiner Title
+-- AutoJoiner with Perfect JSON Parsing and Rainbow Title
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
 -- Configuration
 local WEBSOCKET_URL = "wss://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/"
-local HOP_INTERVAL = 2
+local HOP_INTERVAL = 2 -- seconds between hops
 local RECONNECT_DELAY = 5
 local MAX_RETRIES = 3
-
--- Rainbow Colors
-local rainbowColors = {
-    Color3.fromRGB(255, 0, 0),    -- Red
-    Color3.fromRGB(255, 127, 0),  -- Orange
-    Color3.fromRGB(255, 255, 0),  -- Yellow
-    Color3.fromRGB(0, 255, 0),    -- Green
-    Color3.fromRGB(0, 0, 255),    -- Blue
-    Color3.fromRGB(75, 0, 130),   -- Indigo
-    Color3.fromRGB(148, 0, 211)   -- Violet
-}
 
 -- State
 local player = Players.LocalPlayer or Players:GetPlayers()[1]
@@ -31,7 +19,6 @@ local lastHopTime = 0
 local activeJobId = nil
 local selectedMpsRange = "1M-3M"
 local connectionAttempts = 0
-local rainbowOffset = 0
 
 -- Wait for player GUI
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
@@ -49,46 +36,6 @@ frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
-
--- Rainbow Animated Title
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -40, 0, 40)
-titleLabel.Position = UDim2.new(0, 20, 0, 15)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "AutoJoiner"
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 22
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Parent = frame
-
--- Rainbow animation connection
-local rainbowConnection
-rainbowConnection = RunService.Heartbeat:Connect(function(deltaTime)
-    rainbowOffset = (rainbowOffset + deltaTime * 2) % 1
-    
-    local text = "AutoJoiner"
-    local coloredText = ""
-    
-    for i = 1, #text do
-        local char = text:sub(i, i)
-        local colorIndex = math.floor((rainbowOffset + (i-1)/#text) * #rainbowColors) % #rainbowColors + 1
-        local color = rainbowColors[colorIndex]
-        coloredText = coloredText .. string.format('<font color="rgb(%d,%d,%d)">%s</font>', 
-            color.r * 255, color.g * 255, color.b * 255, char)
-    end
-    
-    titleLabel.Text = coloredText
-end)
-
--- [Rest of your existing UI code remains the same...]
--- [Keep all your existing WebSocket and control handler code...]
-
--- Cleanup to disconnect rainbow animation when GUI is destroyed
-frame.Destroying:Connect(function()
-    if rainbowConnection then
-        rainbowConnection:Disconnect()
-    end
-end)
 
 -- Draggable Logic
 local dragging, dragInput, dragStart, startPos
@@ -129,17 +76,70 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Title Label
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -40, 0, 40)
-titleLabel.Position = UDim2.new(0, 20, 0, 15)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "AutoJoiner"
-titleLabel.TextColor3 = Color3.fromRGB(90, 0, 90)
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 22
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Parent = frame
+-- Rainbow Colors for Title Animation
+local rainbowColors = {
+    Color3.fromRGB(255, 0, 0),    -- Red
+    Color3.fromRGB(255, 127, 0),  -- Orange
+    Color3.fromRGB(255, 255, 0),  -- Yellow
+    Color3.fromRGB(0, 255, 0),    -- Green
+    Color3.fromRGB(0, 0, 255),    -- Blue
+    Color3.fromRGB(75, 0, 130),   -- Indigo
+    Color3.fromRGB(148, 0, 211)   -- Violet
+}
+
+-- Advanced Per-Character Rainbow Wave Title
+local titleContainer = Instance.new("Frame")
+titleContainer.Size = UDim2.new(1, -40, 0, 40)
+titleContainer.Position = UDim2.new(0, 20, 0, 15)
+titleContainer.BackgroundTransparency = 1
+titleContainer.Parent = frame
+
+local titleText = "AutoJoiner"
+local charLabels = {}
+local charWidth = 18 -- Width of each character
+local totalWidth = #titleText * charWidth
+
+-- Create individual labels for each character
+for i = 1, #titleText do
+    local charLabel = Instance.new("TextLabel")
+    charLabel.Size = UDim2.new(0, charWidth, 1, 0)
+    charLabel.Position = UDim2.new(0, (i-1)*charWidth, 0, 0)
+    charLabel.BackgroundTransparency = 1
+    charLabel.Text = titleText:sub(i,i)
+    charLabel.TextColor3 = rainbowColors[(i-1) % #rainbowColors + 1]
+    charLabel.Font = Enum.Font.GothamBold
+    charLabel.TextSize = 22
+    charLabel.TextXAlignment = Enum.TextXAlignment.Left
+    charLabel.Parent = titleContainer
+    table.insert(charLabels, charLabel)
+end
+
+-- Adjust container size to fit text exactly
+titleContainer.Size = UDim2.new(0, totalWidth, 0, 40)
+
+-- Rainbow wave animation variables
+local waveSpeed = 0.5 -- Speed of the wave effect
+local waveOffset = 0
+
+-- Advanced wave animation function
+local function startAdvancedRainbowWave()
+    while true do
+        -- Update each character's color based on its position and the wave offset
+        for i, label in ipairs(charLabels) do
+            local colorIndex = (i + waveOffset) % #rainbowColors + 1
+            label.TextColor3 = rainbowColors[colorIndex]
+        end
+        
+        -- Increment the wave offset for the next frame
+        waveOffset = (waveOffset + 1) % (#rainbowColors * 2)
+        
+        -- Wait for next frame
+        task.wait(waveSpeed / 10)
+    end
+end
+
+-- Start the animation
+coroutine.wrap(startAdvancedRainbowWave)()
 
 -- Status Label
 local statusLabel = Instance.new("TextLabel")
@@ -486,4 +486,3 @@ player.AncestryChanged:Connect(function(_, parent)
         pcall(function() socket:Close() end)
     end
 end)
-
