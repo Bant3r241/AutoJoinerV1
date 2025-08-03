@@ -1,4 +1,4 @@
--- AutoJoiner with Original GUI + Live WebSocket Hopping
+-- AutoJoiner with Fixed Dropdown + Live WebSocket Hopping
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -20,7 +20,7 @@ local activeJobId = nil
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Restore Original GUI
+-- GUI Setup (Original)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AutoJoinerGUI"
 screenGui.ResetOnSpawn = false
@@ -72,7 +72,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Original Title Label
+-- Title Label
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -40, 0, 40)
 titleLabel.Position = UDim2.new(0, 20, 0, 15)
@@ -84,10 +84,10 @@ titleLabel.TextSize = 22
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = frame
 
--- Status Label (Modified)
+-- Status Label
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -40, 0, 20)
-statusLabel.Position = UDim2.new(0, 20, 0, 50)
+statusLabel.Position = UDim2.new(0, 20, 0, 60)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = "Status: Disconnected"
 statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -96,10 +96,10 @@ statusLabel.TextSize = 14
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = frame
 
--- Server Info Label (New)
+-- Server Info Label
 local serverInfoLabel = Instance.new("TextLabel")
 serverInfoLabel.Size = UDim2.new(1, -40, 0, 20)
-serverInfoLabel.Position = UDim2.new(0, 20, 0, 75)
+serverInfoLabel.Position = UDim2.new(0, 20, 0, 85)
 serverInfoLabel.BackgroundTransparency = 1
 serverInfoLabel.Text = "Server: None"
 serverInfoLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
@@ -108,10 +108,10 @@ serverInfoLabel.TextSize = 14
 serverInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
 serverInfoLabel.Parent = frame
 
--- Original MPS Dropdown (Non-functional but preserved)
+-- FIXED Dropdown System
 local mpsLabel = Instance.new("TextLabel")
 mpsLabel.Size = UDim2.new(1, -40, 0, 20)
-mpsLabel.Position = UDim2.new(0, 20, 0, 105)
+mpsLabel.Position = UDim2.new(0, 20, 0, 110)
 mpsLabel.BackgroundTransparency = 1
 mpsLabel.Text = "Select MPS Range:"
 mpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -122,7 +122,7 @@ mpsLabel.Parent = frame
 
 local mpsDropdown = Instance.new("TextButton")
 mpsDropdown.Size = UDim2.new(1, -40, 0, 40)
-mpsDropdown.Position = UDim2.new(0, 20, 0, 130)
+mpsDropdown.Position = UDim2.new(0, 20, 0, 135)
 mpsDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 mpsDropdown.BorderSizePixel = 0
 mpsDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -132,7 +132,53 @@ mpsDropdown.Text = "1M-3M  ▼"
 mpsDropdown.AutoButtonColor = false
 mpsDropdown.Parent = frame
 
--- Original Start/Stop Buttons
+local optionsFrame = Instance.new("Frame")
+optionsFrame.Size = UDim2.new(1, -40, 0, 0)
+optionsFrame.Position = UDim2.new(0, 20, 0, 175)
+optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+optionsFrame.BorderSizePixel = 0
+optionsFrame.ClipsDescendants = true
+optionsFrame.Parent = frame
+
+local mpsRanges = {"1M-3M", "3M+"}
+local isDropdownOpen = false
+local selectedMpsRange = mpsRanges[1]
+
+-- FIXED Dropdown Toggle
+local function toggleDropdown()
+    if isDropdownOpen then
+        optionsFrame:TweenSize(UDim2.new(1, -40, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
+        mpsDropdown.Text = selectedMpsRange.."  ▼"
+    else
+        optionsFrame:TweenSize(UDim2.new(1, -40, 0, #mpsRanges * 40), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
+        mpsDropdown.Text = selectedMpsRange.."  ▲"
+    end
+    isDropdownOpen = not isDropdownOpen
+end
+
+mpsDropdown.MouseButton1Click:Connect(toggleDropdown)
+
+-- Create dropdown options
+for i, range in ipairs(mpsRanges) do
+    local option = Instance.new("TextButton")
+    option.Size = UDim2.new(1, 0, 0, 40)
+    option.Position = UDim2.new(0, 0, 0, (i-1)*40)
+    option.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    option.BorderSizePixel = 0
+    option.Text = range
+    option.TextColor3 = Color3.fromRGB(255, 255, 255)
+    option.Font = Enum.Font.GothamBold
+    option.TextSize = 18
+    option.AutoButtonColor = false
+    option.Parent = optionsFrame
+    
+    option.MouseButton1Click:Connect(function()
+        selectedMpsRange = range
+        toggleDropdown()
+    end)
+end
+
+-- Start/Stop Buttons
 local startBtn = Instance.new("TextButton")
 startBtn.Size = UDim2.new(1, -40, 0, 40)
 startBtn.Position = UDim2.new(0, 20, 0, 190)
@@ -157,7 +203,7 @@ stopBtn.Text = "Stop"
 stopBtn.AutoButtonColor = false
 stopBtn.Parent = frame
 
--- Original Minimize Button
+-- Minimize Button
 local minimizeBtn = Instance.new("ImageButton")
 minimizeBtn.Size = UDim2.new(0, 40, 0, 40)
 minimizeBtn.Position = UDim2.new(1, -40, 0, 0)
@@ -184,15 +230,13 @@ minimizedImage.MouseButton1Click:Connect(function()
     minimizedImage.Visible = false
 end)
 
--- Core Functions (Improved)
+-- WebSocket Functions
 local function attemptTeleport(jobId)
     if not isRunning then return false end
     
-    -- Rate limiting
     local currentTime = os.time()
     if currentTime - lastHopTime < HOP_INTERVAL then
-        local waitTime = HOP_INTERVAL - (currentTime - lastHopTime)
-        task.wait(waitTime)
+        task.wait(HOP_INTERVAL - (currentTime - lastHopTime))
     end
     
     lastHopTime = os.time()
@@ -214,25 +258,15 @@ local function attemptTeleport(jobId)
 end
 
 local function handleWebSocketMessage(message)
-    local success, data = pcall(function()
-        return HttpService:JSONDecode(message)
-    end)
+    local success, data = pcall(HttpService.JSONDecode, HttpService, message)
+    if not success then return end
     
-    if not success then
-        warn("Invalid message:", message)
-        return
-    end
-    
-    -- Supports both formats
     local jobId = data.jobId or (data.jobIds and data.jobIds[1])
+    if not jobId then return end
     
-    if jobId and type(jobId) == "string" then
-        statusLabel.Text = "Status: Joining..."
-        statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-        attemptTeleport(jobId)
-    else
-        warn("Invalid job ID format")
-    end
+    statusLabel.Text = "Status: Joining..."
+    statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    attemptTeleport(jobId)
 end
 
 local function connectWebSocket()
@@ -244,18 +278,6 @@ local function connectWebSocket()
     newSocket.OnMessage:Connect(handleWebSocketMessage)
     
     newSocket.OnClose:Connect(function()
-        if isRunning then
-            statusLabel.Text = "Status: Reconnecting..."
-            task.wait(RECONNECT_DELAY)
-            socket = connectWebSocket()
-        else
-            statusLabel.Text = "Status: Disconnected"
-            statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-        end
-    end)
-    
-    newSocket.OnError:Connect(function(err)
-        warn("WebSocket error:", err)
         if isRunning then
             task.wait(RECONNECT_DELAY)
             socket = connectWebSocket()
@@ -270,44 +292,20 @@ end
 -- Control Handlers
 startBtn.MouseButton1Click:Connect(function()
     if isRunning then return end
-    
     isRunning = true
-    startBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
-    stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    
-    if not socket then
-        socket = connectWebSocket()
-    else
-        statusLabel.Text = "Status: Waiting for servers..."
-    end
+    if not socket then socket = connectWebSocket() end
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
     if not isRunning then return end
-    
     isRunning = false
-    startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    stopBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
     statusLabel.Text = "Status: Stopped"
     statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    serverInfoLabel.Text = "Server: None"
 end)
 
 -- Cleanup
 player.AncestryChanged:Connect(function(_, parent)
     if not parent and socket then
         pcall(function() socket:Close() end)
-    end
-end)
-
--- Debug command (F3 to print state)
-UserInputService.InputBegan:Connect(function(input, processed)
-    if not processed and input.KeyCode == Enum.KeyCode.F3 then
-        print("\n=== AUTOJOINER STATE ===")
-        print("Running:", isRunning)
-        print("Socket:", socket and "Connected" or "Disconnected")
-        print("Last server:", activeJobId)
-        print("Last hop:", os.time() - lastHopTime, "seconds ago")
-        print("=========================")
     end
 end)
