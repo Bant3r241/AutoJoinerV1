@@ -1,14 +1,26 @@
--- AutoJoiner with Perfect JSON Parsing
+-- Rainbow Animated AutoJoiner Title
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 -- Configuration
 local WEBSOCKET_URL = "wss://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/"
-local HOP_INTERVAL = 2 -- seconds between hops
+local HOP_INTERVAL = 2
 local RECONNECT_DELAY = 5
 local MAX_RETRIES = 3
+
+-- Rainbow Colors
+local rainbowColors = {
+    Color3.fromRGB(255, 0, 0),    -- Red
+    Color3.fromRGB(255, 127, 0),  -- Orange
+    Color3.fromRGB(255, 255, 0),  -- Yellow
+    Color3.fromRGB(0, 255, 0),    -- Green
+    Color3.fromRGB(0, 0, 255),    -- Blue
+    Color3.fromRGB(75, 0, 130),   -- Indigo
+    Color3.fromRGB(148, 0, 211)   -- Violet
+}
 
 -- State
 local player = Players.LocalPlayer or Players:GetPlayers()[1]
@@ -19,6 +31,7 @@ local lastHopTime = 0
 local activeJobId = nil
 local selectedMpsRange = "1M-3M"
 local connectionAttempts = 0
+local rainbowOffset = 0
 
 -- Wait for player GUI
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
@@ -36,6 +49,46 @@ frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
+
+-- Rainbow Animated Title
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -40, 0, 40)
+titleLabel.Position = UDim2.new(0, 20, 0, 15)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "AutoJoiner"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 22
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = frame
+
+-- Rainbow animation connection
+local rainbowConnection
+rainbowConnection = RunService.Heartbeat:Connect(function(deltaTime)
+    rainbowOffset = (rainbowOffset + deltaTime * 2) % 1
+    
+    local text = "AutoJoiner"
+    local coloredText = ""
+    
+    for i = 1, #text do
+        local char = text:sub(i, i)
+        local colorIndex = math.floor((rainbowOffset + (i-1)/#text) * #rainbowColors) % #rainbowColors + 1
+        local color = rainbowColors[colorIndex]
+        coloredText = coloredText .. string.format('<font color="rgb(%d,%d,%d)">%s</font>', 
+            color.r * 255, color.g * 255, color.b * 255, char)
+    end
+    
+    titleLabel.Text = coloredText
+end)
+
+-- [Rest of your existing UI code remains the same...]
+-- [Keep all your existing WebSocket and control handler code...]
+
+-- Cleanup to disconnect rainbow animation when GUI is destroyed
+frame.Destroying:Connect(function()
+    if rainbowConnection then
+        rainbowConnection:Disconnect()
+    end
+end)
 
 -- Draggable Logic
 local dragging, dragInput, dragStart, startPos
@@ -433,3 +486,4 @@ player.AncestryChanged:Connect(function(_, parent)
         pcall(function() socket:Close() end)
     end
 end)
+
