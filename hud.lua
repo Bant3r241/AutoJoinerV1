@@ -1,4 +1,4 @@
--- AutoJoiner with MPS Filter Dropdown (1M-3M, 3M-5M, 5M+)
+-- AutoJoiner with Resume Button & MPS Filtering
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -13,6 +13,7 @@ local RECONNECT_DELAY = 5
 local player = Players.LocalPlayer or Players:GetPlayers()[1]
 local socket = nil
 local isRunning = false
+local isPaused = false
 local lastHopTime = 0
 local activeJobId = nil
 local selectedMpsRange = "1M-3M" -- Default selection
@@ -28,7 +29,7 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 500) -- Increased height for additional option
+frame.Size = UDim2.new(0, 300, 0, 550) -- Increased height for Resume button
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
@@ -109,7 +110,7 @@ serverInfoLabel.TextSize = 14
 serverInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
 serverInfoLabel.Parent = frame
 
--- Fixed Dropdown System
+-- MPS Dropdown System
 local mpsLabel = Instance.new("TextLabel")
 mpsLabel.Size = UDim2.new(1, -40, 0, 20)
 mpsLabel.Position = UDim2.new(0, 20, 0, 110)
@@ -133,7 +134,6 @@ mpsDropdown.Text = "1M-3M  ▼"
 mpsDropdown.AutoButtonColor = false
 mpsDropdown.Parent = frame
 
--- Dropdown Options Frame
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
 optionsFrame.Position = UDim2.new(0, 20, 0, 175)
@@ -182,7 +182,7 @@ for i, range in ipairs(mpsRanges) do
     end)
 end
 
--- Start/Stop Buttons (Positioned below dropdown)
+-- Start Button
 local startBtn = Instance.new("TextButton")
 startBtn.Size = UDim2.new(1, -40, 0, 40)
 startBtn.Position = UDim2.new(0, 20, 0, 320)
@@ -195,6 +195,7 @@ startBtn.Text = "Start"
 startBtn.AutoButtonColor = false
 startBtn.Parent = frame
 
+-- Stop Button
 local stopBtn = Instance.new("TextButton")
 stopBtn.Size = UDim2.new(1, -40, 0, 40)
 stopBtn.Position = UDim2.new(0, 20, 0, 370)
@@ -206,6 +207,19 @@ stopBtn.TextSize = 20
 stopBtn.Text = "Stop"
 stopBtn.AutoButtonColor = false
 stopBtn.Parent = frame
+
+-- NEW: Resume Button
+local resumeBtn = Instance.new("TextButton")
+resumeBtn.Size = UDim2.new(1, -40, 0, 40)
+resumeBtn.Position = UDim2.new(0, 20, 0, 420)
+resumeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+resumeBtn.BorderSizePixel = 0
+resumeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+resumeBtn.Font = Enum.Font.GothamBold
+resumeBtn.TextSize = 20
+resumeBtn.Text = "Resume"
+resumeBtn.AutoButtonColor = false
+resumeBtn.Parent = frame
 
 -- Minimize Button
 local minimizeBtn = Instance.new("ImageButton")
@@ -236,7 +250,7 @@ end)
 
 -- WebSocket Functions
 local function attemptTeleport(jobId)
-    if not isRunning then return false end
+    if not isRunning or isPaused then return false end
     
     local currentTime = os.time()
     if currentTime - lastHopTime < HOP_INTERVAL then
@@ -262,34 +276,41 @@ local function attemptTeleport(jobId)
 end
 
 local function handleWebSocketMessage(message)
+    if isPaused then return end
+    
     local success, data = pcall(HttpService.JSONDecode, HttpService, message)
     if not success then return end
     
-    -- Extract server info
-    local jobId = data.jobId or (data.jobIds and data.jobIds[1])
-    local mps = data.mps or (data.players and data.players / (data.time or 1)) -- Calculate MPS if not provided
-    
-    if not jobId or not mps then return end
-    
-    -- Convert MPS to millions
-    local mpsMillions = mps / 1000000
-    
-    -- Check if server matches selected filter
-    local shouldJoin = false
-    if selectedMpsRange == "1M-3M" then
-        shouldJoin = mpsMillions >= 1 and mpsMillions <= 3
-    elseif selectedMpsRange == "3M-5M" then
-        shouldJoin = mpsMillions > 3 and mpsMillions <= 5
-    elseif selectedMpsRange == "5M+" then
-        shouldJoin = mpsMillions > 5
+    -- Extract jobId and MPS (assuming format: { jobId = "abc123", mps = 2500000 })
+    local jobId = data.jobId
+    local mps = data.mps
+
+    if not jobId or not mps then
+        statusLabel.Text = "Status: Invalid Server Data"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
     end
-    
+
+    -- Convert MPS to millions for comparison
+    local mpsMillions = mps / 1000000
+    local shouldJoin = false
+
+    -- Check selected MPS range
+    if selectedMpsRange == "1M-3M" then
+        shouldJoin = (mpsMillions >= 1 and mpsMillions <= 3)
+    elseif selectedMpsRange == "3M-5M" then
+        shouldJoin = (mpsMillions > 3 and mpsMillions <= 5)
+    elseif selectedMpsRange == "5M+" then
+        shouldJoin = (mpsMillions > 5)
+    end
+
+    -- Decision: Join or Skip
     if shouldJoin then
-        statusLabel.Text = "Status: Joining "..string.format("%.1f", mpsMillions).."M/s"
+        statusLabel.Text = string.format("Status: Joining (%.1fM/s)", mpsMillions)
         statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
         attemptTeleport(jobId)
     else
-        statusLabel.Text = "Status: Skipping "..string.format("%.1f", mpsMillions).."M/s"
+        statusLabel.Text = string.format("Status: Skipping (%.1fM/s)", mpsMillions)
         statusLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
     end
 end
@@ -303,7 +324,7 @@ local function connectWebSocket()
     newSocket.OnMessage:Connect(handleWebSocketMessage)
     
     newSocket.OnClose:Connect(function()
-        if isRunning then
+        if isRunning and not isPaused then
             task.wait(RECONNECT_DELAY)
             socket = connectWebSocket()
         end
@@ -318,14 +339,24 @@ end
 startBtn.MouseButton1Click:Connect(function()
     if isRunning then return end
     isRunning = true
+    isPaused = false
     if not socket then socket = connectWebSocket() end
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
     if not isRunning then return end
     isRunning = false
+    isPaused = false
     statusLabel.Text = "Status: Stopped"
     statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+end)
+
+-- NEW: Resume Button Functionality
+resumeBtn.MouseButton1Click:Connect(function()
+    if not isRunning or not isPaused then return end
+    isPaused = false
+    statusLabel.Text = "Status: Resumed"
+    statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
 end)
 
 -- Cleanup
@@ -340,6 +371,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
     if not processed and input.KeyCode == Enum.KeyCode.F3 then
         print("\n=== AUTOJOINER STATE ===")
         print("Running:", isRunning)
+        print("Paused:", isPaused)
         print("Socket:", socket and "Connected" or "Disconnected")
         print("Last server:", activeJobId)
         print("Last hop:", os.time() - lastHopTime, "seconds ago")
