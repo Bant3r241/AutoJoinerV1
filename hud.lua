@@ -1,4 +1,4 @@
--- AutoJoiner with Perfect Format Matching
+-- AutoJoiner with Exact Format Parsing
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -282,33 +282,36 @@ local function handleWebSocketMessage(message)
     
     print("[WebSocket] Raw message:", message)
     
-    -- EXACT MATCH FOR YOUR FORMAT:
-    -- new server detected "La Grande"
-    -- Money/Sec 1.5M
-    -- Job ID "ID"
-    local jobId = message:match('Job ID%s+"([^"]+)"')
-    local mpsValue = message:match('Money/Sec%s+([%d%.]+)M')
+    -- EXACT FORMAT PARSING FOR:
+    -- job id "ID123" Server name "Test Server" MoneyPerSec "1.5M"
+    local jobId, serverName, mpsValue = message:match('job id%s+"([^"]+)"%s+Server name%s+"([^"]+)"%s+MoneyPerSec%s+"([%d%.]+)M"')
     
-    -- Alternative case matching if first attempt fails
-    if not jobId then jobId = message:match('job id%s+"([^"]+)"') end
-    if not mpsValue then mpsValue = message:match('money/sec%s+([%d%.]+)m') end
+    -- Alternative parsing if exact match fails
+    if not jobId then
+        jobId, mpsValue = message:match('job id%s+"([^"]+)"%s+.*MoneyPerSec%s+"([%d%.]+)M"')
+    end
+    
+    -- More flexible parsing
+    if not jobId then
+        jobId = message:match('job id%s+"([^"]+)"')
+        mpsValue = message:match('MoneyPerSec%s+"([%d%.]+)M"')
+    end
+    
+    -- Final fallback
+    if not jobId or not mpsValue then
+        statusLabel.Text = "Status: Checking format..."
+        jobId = jobId or message:match('job id%s+([%w-]+)')
+        mpsValue = mpsValue or message:match('MoneyPerSec%s+([%d%.]+)M')
+    end
     
     -- Validate results
     if not jobId or not mpsValue then
-        statusLabel.Text = "Status: Checking message format..."
-        -- Try one last time with more flexible matching
-        jobId = jobId or message:match('ID%s*[:=]?%s*["\']?([%w-]+)')
-        mpsValue = mpsValue or message:match('MPS%s*[:=]?%s*([%d%.]+)')
-        
-        if not jobId or not mpsValue then
-            statusLabel.Text = "Status: Invalid format"
-            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-            print("[ERROR] Expected format example:")
-            print('new server detected "ServerName"')
-            print('Money/Sec 1.5M')
-            print('Job ID "ABC123"')
-            return
-        end
+        statusLabel.Text = "Status: Invalid format"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        print("[ERROR] Expected format:")
+        print('job id "ABC123" Server name "Test Server" MoneyPerSec "1.5M"')
+        print("Received:", message)
+        return
     end
     
     -- Convert MPS to number
@@ -340,6 +343,9 @@ local function handleWebSocketMessage(message)
         statusLabel.Text = string.format("Skipping %s (%.1fM/s)", string.sub(jobId, 1, 8), mpsMillions)
         statusLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
     end
+    
+    print(string.format("Parsed - JobID: %s | Server: %s | MPS: %.1fM | Action: %s",
+        jobId, serverName or "N/A", mpsMillions, shouldJoin and "Joining" or "Skipping"))
 end
 
 local function connectWebSocket()
