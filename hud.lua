@@ -1,4 +1,3 @@
-
 -- AutoJoiner with Perfect JSON Parsing and Rainbow Title
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -199,7 +198,7 @@ optionsFrame.ClipsDescendants = true
 optionsFrame.ZIndex = 2
 optionsFrame.Parent = frame
 
-local mpsRanges = {"1M-3M", "3M-5M", "5M+"}
+local mpsRanges = {"1M-3M", "3M-5M", "5M-9.9M", "10M+"}
 local isDropdownOpen = false
 
 local function toggleDropdown()
@@ -369,17 +368,19 @@ local function handleWebSocketMessage(message)
         return
     end
     
-    -- Apply MPS filter
-    local shouldJoin = false
-    local mpsMillions = mps -- Already in millions
-    
-    if selectedMpsRange == "1M-3M" then
-        shouldJoin = (mpsMillions >= 1 and mpsMillions <= 3)
-    elseif selectedMpsRange == "3M-5M" then
-        shouldJoin = (mpsMillions > 3 and mpsMillions <= 5)
-    elseif selectedMpsRange == "5M+" then
-        shouldJoin = (mpsMillions > 5)
-    end
+-- Apply MPS filter
+local shouldJoin = false
+local mpsMillions = mps -- Already in millions
+
+if selectedMpsRange == "1M-3M" then
+    shouldJoin = (mpsMillions >= 1 and mpsMillions <= 3)
+elseif selectedMpsRange == "3M-5M" then
+    shouldJoin = (mpsMillions > 3 and mpsMillions <= 5)
+elseif selectedMpsRange == "5M-9.9M" then
+    shouldJoin = (mpsMillions > 5 and mpsMillions <= 9.9)
+elseif selectedMpsRange == "10M+" then
+    shouldJoin = (mpsMillions >= 10)
+end
     
     -- Take action
     if shouldJoin then
