@@ -17,7 +17,7 @@ local isRunning = false
 local isPaused = false
 local lastHopTime = 0
 local activeJobId = nil
-local selectedMpsRange = "1M-3M"
+local selectedMpsRange = "5M-7.5M"
 local connectionAttempts = 0
 
 -- Wait for player GUI
@@ -185,7 +185,7 @@ mpsDropdown.BorderSizePixel = 0
 mpsDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
 mpsDropdown.Font = Enum.Font.GothamBold
 mpsDropdown.TextSize = 18
-mpsDropdown.Text = "1M-3M  ▼"
+mpsDropdown.Text = "5M-7.5M  ▼"
 mpsDropdown.AutoButtonColor = false
 mpsDropdown.Parent = frame
 
@@ -198,7 +198,8 @@ optionsFrame.ClipsDescendants = true
 optionsFrame.ZIndex = 2
 optionsFrame.Parent = frame
 
-local mpsRanges = {"1M-3M", "3M-5M", "5M-9.9M", "10M+"}
+-- Updated MPS ranges to focus on 5M-9.9M
+local mpsRanges = {"5M-7.5M", "7.5M-9M", "9M+"}
 local isDropdownOpen = false
 
 local function toggleDropdown()
@@ -368,19 +369,17 @@ local function handleWebSocketMessage(message)
         return
     end
     
--- Apply MPS filter
-local shouldJoin = false
-local mpsMillions = mps -- Already in millions
-
-if selectedMpsRange == "1M-3M" then
-    shouldJoin = (mpsMillions >= 1 and mpsMillions <= 3)
-elseif selectedMpsRange == "3M-5M" then
-    shouldJoin = (mpsMillions > 3 and mpsMillions <= 5)
-elseif selectedMpsRange == "5M-9.9M" then
-    shouldJoin = (mpsMillions > 5 and mpsMillions <= 9.9)
-elseif selectedMpsRange == "10M+" then
-    shouldJoin = (mpsMillions >= 10)
-end
+    -- Apply MPS filter (updated for 5M-9.9M ranges)
+    local shouldJoin = false
+    local mpsMillions = mps -- Already in millions
+    
+    if selectedMpsRange == "5M-7.5M" then
+        shouldJoin = (mpsMillions >= 5 and mpsMillions <= 7.5)
+    elseif selectedMpsRange == "7.5M-9M" then
+        shouldJoin = (mpsMillions > 7.5 and mpsMillions <= 9)
+    elseif selectedMpsRange == "9M+" then
+        shouldJoin = (mpsMillions > 9)
+    end
     
     -- Take action
     if shouldJoin then
