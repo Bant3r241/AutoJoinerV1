@@ -1,4 +1,4 @@
--- AutoJoiner with Exact Format Parsing
+-- AutoJoiner with Perfect JSON Parsing
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -282,40 +282,33 @@ local function handleWebSocketMessage(message)
     
     print("[WebSocket] Raw message:", message)
     
-    -- EXACT FORMAT PARSING FOR:
-    -- job id "ID123" Server name "Test Server" MoneyPerSec "1.5M"
-    local jobId, serverName, mpsValue = message:match('job id%s+"([^"]+)"%s+Server name%s+"([^"]+)"%s+MoneyPerSec%s+"([%d%.]+)M"')
+    -- Parse JSON message
+    local success, data = pcall(function()
+        return HttpService:JSONDecode(message)
+    end)
     
-    -- Alternative parsing if exact match fails
-    if not jobId then
-        jobId, mpsValue = message:match('job id%s+"([^"]+)"%s+.*MoneyPerSec%s+"([%d%.]+)M"')
-    end
-    
-    -- More flexible parsing
-    if not jobId then
-        jobId = message:match('job id%s+"([^"]+)"')
-        mpsValue = message:match('MoneyPerSec%s+"([%d%.]+)M"')
-    end
-    
-    -- Final fallback
-    if not jobId or not mpsValue then
-        statusLabel.Text = "Status: Checking format..."
-        jobId = jobId or message:match('job id%s+([%w-]+)')
-        mpsValue = mpsValue or message:match('MoneyPerSec%s+([%d%.]+)M')
-    end
-    
-    -- Validate results
-    if not jobId or not mpsValue then
-        statusLabel.Text = "Status: Invalid format"
+    if not success then
+        statusLabel.Text = "Status: Invalid JSON"
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        print("[ERROR] Expected format:")
-        print('job id "ABC123" Server name "Test Server" MoneyPerSec "1.5M"')
-        print("Received:", message)
+        print("[ERROR] Failed to parse JSON:", message)
+        return
+    end
+    
+    -- Extract data from JSON
+    local jobId = data.jobId
+    local serverName = data.serverName
+    local mpsText = data.moneyPerSec and data.moneyPerSec:match("([%d%.]+)M")
+    
+    -- Validate required fields
+    if not jobId or not mpsText then
+        statusLabel.Text = "Status: Missing data"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        print("[ERROR] Missing jobId or moneyPerSec in:", data)
         return
     end
     
     -- Convert MPS to number
-    local mps = tonumber(mpsValue)
+    local mps = tonumber(mpsText)
     if not mps then
         statusLabel.Text = "Status: Invalid MPS value"
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
