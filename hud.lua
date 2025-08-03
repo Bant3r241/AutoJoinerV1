@@ -1,4 +1,4 @@
--- AutoJoiner with Perfect Non-Overlapping Dropdown Layout
+-- AutoJoiner with MPS Filter Dropdown (1M-3M, 3M-5M, 5M+)
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -15,19 +15,20 @@ local socket = nil
 local isRunning = false
 local lastHopTime = 0
 local activeJobId = nil
+local selectedMpsRange = "1M-3M" -- Default selection
 
 -- Wait for player GUI
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Main GUI (Increased height to prevent overlap)
+-- Main GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AutoJoinerGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 450) -- Increased height
+frame.Size = UDim2.new(0, 300, 0, 500) -- Increased height for additional option
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
@@ -132,19 +133,18 @@ mpsDropdown.Text = "1M-3M  ▼"
 mpsDropdown.AutoButtonColor = false
 mpsDropdown.Parent = frame
 
--- Dropdown Options Frame (Positioned with safe spacing)
+-- Dropdown Options Frame
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(1, -40, 0, 0)
-optionsFrame.Position = UDim2.new(0, 20, 0, 175) -- Adjusted position
+optionsFrame.Position = UDim2.new(0, 20, 0, 175)
 optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 optionsFrame.BorderSizePixel = 0
 optionsFrame.ClipsDescendants = true
 optionsFrame.ZIndex = 2
 optionsFrame.Parent = frame
 
-local mpsRanges = {"1M-3M", "3M+"}
+local mpsRanges = {"1M-3M", "3M-5M", "5M+"}
 local isDropdownOpen = false
-local selectedMpsRange = mpsRanges[1]
 
 local function toggleDropdown()
     if isDropdownOpen then
@@ -177,13 +177,15 @@ for i, range in ipairs(mpsRanges) do
     option.MouseButton1Click:Connect(function()
         selectedMpsRange = range
         toggleDropdown()
+        statusLabel.Text = "Status: Filter set to "..range
+        statusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
     end)
 end
 
--- Start/Stop Buttons (Positioned safely below dropdown)
+-- Start/Stop Buttons (Positioned below dropdown)
 local startBtn = Instance.new("TextButton")
 startBtn.Size = UDim2.new(1, -40, 0, 40)
-startBtn.Position = UDim2.new(0, 20, 0, 260) -- Moved further down
+startBtn.Position = UDim2.new(0, 20, 0, 320)
 startBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 startBtn.BorderSizePixel = 0
 startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -195,7 +197,7 @@ startBtn.Parent = frame
 
 local stopBtn = Instance.new("TextButton")
 stopBtn.Size = UDim2.new(1, -40, 0, 40)
-stopBtn.Position = UDim2.new(0, 20, 0, 310) -- Moved further down
+stopBtn.Position = UDim2.new(0, 20, 0, 370)
 stopBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 stopBtn.BorderSizePixel = 0
 stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -263,12 +265,33 @@ local function handleWebSocketMessage(message)
     local success, data = pcall(HttpService.JSONDecode, HttpService, message)
     if not success then return end
     
+    -- Extract server info
     local jobId = data.jobId or (data.jobIds and data.jobIds[1])
-    if not jobId then return end
+    local mps = data.mps or (data.players and data.players / (data.time or 1)) -- Calculate MPS if not provided
     
-    statusLabel.Text = "Status: Joining..."
-    statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-    attemptTeleport(jobId)
+    if not jobId or not mps then return end
+    
+    -- Convert MPS to millions
+    local mpsMillions = mps / 1000000
+    
+    -- Check if server matches selected filter
+    local shouldJoin = false
+    if selectedMpsRange == "1M-3M" then
+        shouldJoin = mpsMillions >= 1 and mpsMillions <= 3
+    elseif selectedMpsRange == "3M-5M" then
+        shouldJoin = mpsMillions > 3 and mpsMillions <= 5
+    elseif selectedMpsRange == "5M+" then
+        shouldJoin = mpsMillions > 5
+    end
+    
+    if shouldJoin then
+        statusLabel.Text = "Status: Joining "..string.format("%.1f", mpsMillions).."M/s"
+        statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        attemptTeleport(jobId)
+    else
+        statusLabel.Text = "Status: Skipping "..string.format("%.1f", mpsMillions).."M/s"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
+    end
 end
 
 local function connectWebSocket()
