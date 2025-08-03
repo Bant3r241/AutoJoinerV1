@@ -3,20 +3,20 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
 
--- Wait for player to load
-local player = Players.LocalPlayer or Players:GetPlayers()[1]
+-- Wait for player to load properly
+local player = Players.LocalPlayer
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 local playerGui = player:WaitForChild("PlayerGui")
 
 -- WebSocket Configuration
-local WEBSOCKET_URL = "wss://your-replit-server.your-username.repl.co/"
+local WEBSOCKET_URL = "wss://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/"
 local socket = nil
 local RECONNECT_DELAY = 5 -- seconds
 
--- Create UI (your existing UI code here remains the same)
+-- Create UI (your existing UI creation code here)
 -- [Previous UI creation code...]
 
--- ========== Improved WebSocket Implementation ==========
+-- ========== WebSocket Implementation with Full Error Handling ==========
 
 local isRunning = false
 local currentJobIdIndex = 0
@@ -24,12 +24,21 @@ local jobIds = {}
 local teleportAttempts = 0
 local MAX_TELEPORT_ATTEMPTS = 5
 
-local function updateStatus(text, color)
-    statusLabel.Text = "Status: "..text
-    statusLabel.TextColor3 = color or Color3.fromRGB(200, 200, 200)
+-- Verify WebSocket exists
+if not WebSocket then
+    warn("WebSocket is not available in this environment")
+    updateStatus("WebSocket not supported", Color3.fromRGB(255, 0, 0))
+    return
 end
 
--- Safe WebSocket connection function
+local function updateStatus(text, color)
+    if statusLabel then
+        statusLabel.Text = "Status: "..text
+        statusLabel.TextColor3 = color or Color3.fromRGB(200, 200, 200)
+    end
+end
+
+-- Safe WebSocket connection with full error handling
 local function connectWebSocket()
     updateStatus("Connecting...", Color3.fromRGB(255, 255, 0))
     
@@ -44,38 +53,49 @@ local function connectWebSocket()
     end
     
     -- Message handler
-    newSocket.OnMessage:Connect(function(message)
-        local success, data = pcall(function()
-            return HttpService:JSONDecode(message)
-        end)
-        
-        if success and data and data.jobIds then
-            jobIds = data.jobIds
-            updateStatus("Connected - "..#jobIds.." servers", Color3.fromRGB(0, 255, 0))
+    if newSocket.OnMessage then
+        newSocket.OnMessage:Connect(function(message)
+            local decodeSuccess, data = pcall(function()
+                return HttpService:JSONDecode(message)
+            end)
             
-            if isRunning and #jobIds > 0 then
-                serverHop()
+            if decodeSuccess and data and data.jobIds then
+                jobIds = data.jobIds
+                updateStatus("Connected - "..#jobIds.." servers", Color3.fromRGB(0, 255, 0))
+                
+                if isRunning and #jobIds > 0 then
+                    serverHop()
+                end
             end
-        end
-    end)
+        end)
+    else
+        warn("WebSocket does not have OnMessage event")
+    end
     
     -- Close handler
-    newSocket.OnClose:Connect(function()
-        if isRunning then
-            warn("Connection closed - attempting reconnect in "..RECONNECT_DELAY.."s")
-            updateStatus("Reconnecting...", Color3.fromRGB(255, 165, 0))
-            task.wait(RECONNECT_DELAY)
-            socket = connectWebSocket()
-        else
-            updateStatus("Disconnected", Color3.fromRGB(255, 100, 100))
-        end
-    end)
+    if newSocket.OnClose then
+        newSocket.OnClose:Connect(function()
+            if isRunning then
+                warn("Connection closed - attempting reconnect")
+                updateStatus("Reconnecting...", Color3.fromRGB(255, 165, 0))
+                task.wait(RECONNECT_DELAY)
+                socket = connectWebSocket()
+            else
+                updateStatus("Disconnected", Color3.fromRGB(255, 100, 100))
+            end
+        end)
+    end
     
     return newSocket
 end
 
--- Safe server hop function
+-- Safe server hop with teleport validation
 local function serverHop()
+    if not player or not player:IsDescendantOf(game) then
+        updateStatus("Player not valid", Color3.fromRGB(255, 0, 0))
+        return false
+    end
+    
     if #jobIds == 0 then
         warn("No job ids available for teleport")
         updateStatus("No servers available", Color3.fromRGB(255, 0, 0))
@@ -88,9 +108,13 @@ local function serverHop()
     end
 
     local jobId = jobIds[currentJobIdIndex]
-    updateStatus("Joining server "..currentJobIdIndex.."/"..#jobIds, Color3.fromRGB(0, 255, 255))
-    print("Teleporting to job id:", jobId)
+    if not jobId or type(jobId) ~= "string" then
+        warn("Invalid job ID:", jobId)
+        return false
+    end
 
+    updateStatus("Joining server "..currentJobIdIndex.."/"..#jobIds, Color3.fromRGB(0, 255, 255))
+    
     local success, err = pcall(function()
         TeleportService:TeleportToPlaceInstance(game.PlaceId, jobId, player)
     end)
@@ -106,7 +130,7 @@ local function serverHop()
     return true
 end
 
--- Start/Stop functions with proper nil checks
+-- Start/Stop with complete safety checks
 startBtn.MouseButton1Click:Connect(function()
     if isRunning then return end
     
@@ -116,6 +140,15 @@ startBtn.MouseButton1Click:Connect(function()
     
     -- Initialize WebSocket connection
     socket = connectWebSocket()
+    
+    -- Fallback if connection fails
+    if not socket and isRunning then
+        task.delay(5, function()
+            if isRunning then
+                socket = connectWebSocket()
+            end
+        end)
+    end
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
@@ -123,18 +156,29 @@ stopBtn.MouseButton1Click:Connect(function()
     
     isRunning = false
     if socket then
-        pcall(function() socket:Close() end)
-        socket = nil
+        pcall(function()
+            socket:Close()
+            socket = nil
+        end)
     end
     updateStatus("Stopped", Color3.fromRGB(255, 100, 100))
 end)
 
--- Cleanup
+-- Cleanup when player leaves
+local function cleanup()
+    isRunning = false
+    if socket then
+        pcall(function() socket:Close() end)
+        socket = nil
+    end
+end
+
 player.AncestryChanged:Connect(function(_, parent)
     if not parent then
-        isRunning = false
-        if socket then
-            pcall(function() socket:Close() end)
-        end
+        cleanup()
     end
+end)
+
+game:BindToClose(function()
+    cleanup()
 end)
