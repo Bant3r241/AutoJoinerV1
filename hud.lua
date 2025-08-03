@@ -1,4 +1,4 @@
--- AutoJoiner with MPS Parsing and Resume Functionality
+-- AutoJoiner with Proper MPS Filtering
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -29,7 +29,7 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 550) -- Increased height for Resume button
+frame.Size = UDim2.new(0, 300, 0, 550)
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
@@ -278,34 +278,31 @@ end
 local function handleWebSocketMessage(message)
     if isPaused then return end
     
-    -- Parse server info from log format:
-    -- New Server Detected "Name"
-    -- Money/sec $1.5m
-    -- job id "abc123"
+    print("Raw message:", message) -- Debug output
+    
+    -- Parse the message to extract jobId and MPS
     local jobId = message:match('job id%s+"([^"]+)"')
-    local mpsText = message:match('Money/sec%s+%$(%d+%.?%d*)m')
-
+    local mpsText = message:match('Money/sec%s+%$([%d%.]+)m')
+    
     if not jobId or not mpsText then
-        statusLabel.Text = "Status: Invalid Log Format"
+        statusLabel.Text = "Status: Invalid message format"
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         return
     end
-
-    -- Convert MPS text (e.g., "1.5m") to numeric value (e.g., 1500000)
+    
     local mps = tonumber(mpsText) * 1000000
     local mpsMillions = mps / 1000000
+    
+    -- Determine if we should join based on selected range
     local shouldJoin = false
-
-    -- Check selected MPS range
     if selectedMpsRange == "1M-3M" then
-        shouldJoin = (mpsMillions >= 1 and mpsMillions <= 3)
+        shouldJoin = mpsMillions >= 1 and mpsMillions <= 3
     elseif selectedMpsRange == "3M-5M" then
-        shouldJoin = (mpsMillions > 3 and mpsMillions <= 5)
+        shouldJoin = mpsMillions > 3 and mpsMillions <= 5
     elseif selectedMpsRange == "5M+" then
-        shouldJoin = (mpsMillions > 5)
+        shouldJoin = mpsMillions > 5
     end
-
-    -- Decision: Join or Skip
+    
     if shouldJoin then
         statusLabel.Text = string.format("Status: Joining (%.1fM/s)", mpsMillions)
         statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
@@ -320,12 +317,23 @@ local function connectWebSocket()
     statusLabel.Text = "Status: Connecting..."
     statusLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
     
-    local newSocket = WebSocket.connect(WEBSOCKET_URL)
+    local success, newSocket = pcall(function()
+        return WebSocket.connect(WEBSOCKET_URL)
+    end)
+    
+    if not success then
+        statusLabel.Text = "Status: Connection Failed"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        task.wait(RECONNECT_DELAY)
+        return connectWebSocket()
+    end
     
     newSocket.OnMessage:Connect(handleWebSocketMessage)
     
     newSocket.OnClose:Connect(function()
         if isRunning and not isPaused then
+            statusLabel.Text = "Status: Reconnecting..."
+            statusLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
             task.wait(RECONNECT_DELAY)
             socket = connectWebSocket()
         end
@@ -341,17 +349,24 @@ startBtn.MouseButton1Click:Connect(function()
     if isRunning then return end
     isRunning = true
     isPaused = false
-    if not socket then socket = connectWebSocket() end
+    statusLabel.Text = "Status: Starting..."
+    statusLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+    
+    if not socket then
+        socket = connectWebSocket()
+    end
 end)
 
 stopBtn.MouseButton1Click:Connect(function()
     if not isRunning then return end
     isRunning = false
     isPaused = false
+    
     if socket then
         pcall(function() socket:Close() end)
         socket = nil
     end
+    
     statusLabel.Text = "Status: Stopped"
     statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 end)
