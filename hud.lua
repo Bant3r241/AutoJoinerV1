@@ -1,4 +1,4 @@
--- AutoJoiner with Resume Button & MPS Filtering
+-- AutoJoiner with MPS Parsing and Resume Functionality
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -208,7 +208,7 @@ stopBtn.Text = "Stop"
 stopBtn.AutoButtonColor = false
 stopBtn.Parent = frame
 
--- NEW: Resume Button
+-- Resume Button
 local resumeBtn = Instance.new("TextButton")
 resumeBtn.Size = UDim2.new(1, -40, 0, 40)
 resumeBtn.Position = UDim2.new(0, 20, 0, 420)
@@ -278,20 +278,21 @@ end
 local function handleWebSocketMessage(message)
     if isPaused then return end
     
-    local success, data = pcall(HttpService.JSONDecode, HttpService, message)
-    if not success then return end
-    
-    -- Extract jobId and MPS (assuming format: { jobId = "abc123", mps = 2500000 })
-    local jobId = data.jobId
-    local mps = data.mps
+    -- Parse server info from log format:
+    -- New Server Detected "Name"
+    -- Money/sec $1.5m
+    -- job id "abc123"
+    local jobId = message:match('job id%s+"([^"]+)"')
+    local mpsText = message:match('Money/sec%s+%$(%d+%.?%d*)m')
 
-    if not jobId or not mps then
-        statusLabel.Text = "Status: Invalid Server Data"
+    if not jobId or not mpsText then
+        statusLabel.Text = "Status: Invalid Log Format"
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         return
     end
 
-    -- Convert MPS to millions for comparison
+    -- Convert MPS text (e.g., "1.5m") to numeric value (e.g., 1500000)
+    local mps = tonumber(mpsText) * 1000000
     local mpsMillions = mps / 1000000
     local shouldJoin = false
 
@@ -347,11 +348,14 @@ stopBtn.MouseButton1Click:Connect(function()
     if not isRunning then return end
     isRunning = false
     isPaused = false
+    if socket then
+        pcall(function() socket:Close() end)
+        socket = nil
+    end
     statusLabel.Text = "Status: Stopped"
     statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 end)
 
--- NEW: Resume Button Functionality
 resumeBtn.MouseButton1Click:Connect(function()
     if not isRunning or not isPaused then return end
     isPaused = false
