@@ -1,4 +1,4 @@
--- AutoJoiner with Fixed Dropdown + Live WebSocket Hopping
+-- AutoJoiner with Perfect Dropdown Layout
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
@@ -20,20 +20,20 @@ local activeJobId = nil
 repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 local playerGui = player:WaitForChild("PlayerGui")
 
--- GUI Setup (Original)
+-- Main GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AutoJoinerGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 400)
+frame.Size = UDim2.new(0, 300, 0, 400) -- Adjusted height
 frame.Position = UDim2.new(0.5, -150, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
--- Draggable Logic (Original)
+-- Draggable Logic
 local dragging, dragInput, dragStart, startPos
 
 local function update(input)
@@ -108,7 +108,7 @@ serverInfoLabel.TextSize = 14
 serverInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
 serverInfoLabel.Parent = frame
 
--- FIXED Dropdown System
+-- Fixed Dropdown System
 local mpsLabel = Instance.new("TextLabel")
 mpsLabel.Size = UDim2.new(1, -40, 0, 20)
 mpsLabel.Position = UDim2.new(0, 20, 0, 110)
@@ -138,13 +138,13 @@ optionsFrame.Position = UDim2.new(0, 20, 0, 175)
 optionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 optionsFrame.BorderSizePixel = 0
 optionsFrame.ClipsDescendants = true
+optionsFrame.ZIndex = 2
 optionsFrame.Parent = frame
 
 local mpsRanges = {"1M-3M", "3M+"}
 local isDropdownOpen = false
 local selectedMpsRange = mpsRanges[1]
 
--- FIXED Dropdown Toggle
 local function toggleDropdown()
     if isDropdownOpen then
         optionsFrame:TweenSize(UDim2.new(1, -40, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2)
@@ -170,6 +170,7 @@ for i, range in ipairs(mpsRanges) do
     option.Font = Enum.Font.GothamBold
     option.TextSize = 18
     option.AutoButtonColor = false
+    option.ZIndex = 3
     option.Parent = optionsFrame
     
     option.MouseButton1Click:Connect(function()
@@ -178,10 +179,10 @@ for i, range in ipairs(mpsRanges) do
     end)
 end
 
--- Start/Stop Buttons
+-- Start/Stop Buttons (Positioned below dropdown)
 local startBtn = Instance.new("TextButton")
 startBtn.Size = UDim2.new(1, -40, 0, 40)
-startBtn.Position = UDim2.new(0, 20, 0, 190)
+startBtn.Position = UDim2.new(0, 20, 0, 230) -- Adjusted position
 startBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 startBtn.BorderSizePixel = 0
 startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -193,7 +194,7 @@ startBtn.Parent = frame
 
 local stopBtn = Instance.new("TextButton")
 stopBtn.Size = UDim2.new(1, -40, 0, 40)
-stopBtn.Position = UDim2.new(0, 20, 0, 240)
+stopBtn.Position = UDim2.new(0, 20, 0, 280) -- Adjusted position
 stopBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 stopBtn.BorderSizePixel = 0
 stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -307,5 +308,18 @@ end)
 player.AncestryChanged:Connect(function(_, parent)
     if not parent and socket then
         pcall(function() socket:Close() end)
+    end
+end)
+
+-- Debug command (F3 to print state)
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.F3 then
+        print("\n=== AUTOJOINER STATE ===")
+        print("Running:", isRunning)
+        print("Socket:", socket and "Connected" or "Disconnected")
+        print("Last server:", activeJobId)
+        print("Last hop:", os.time() - lastHopTime, "seconds ago")
+        print("Selected MPS:", selectedMpsRange)
+        print("=========================")
     end
 end)
