@@ -6,7 +6,7 @@ local TeleportService = game:GetService("TeleportService")
 local UserInputService = game:GetService("UserInputService")
 
 -- Configuration
-local WEBSOCKET_URL = "wss://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/"
+local WEBSOCKET_URL = "https://cd9df660-ee00-4af8-ba05-5112f2b5f870-00-xh16qzp1xfp5.janeway.replit.dev/"
 local HOP_INTERVAL = 2 -- seconds between hops
 local RECONNECT_DELAY = 5
 local MAX_RETRIES = 3
@@ -489,3 +489,4 @@ player.AncestryChanged:Connect(function(_, parent)
         pcall(function() socket:Close() end)
     end
 end)
+
